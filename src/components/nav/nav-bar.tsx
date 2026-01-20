@@ -17,7 +17,7 @@ export default async function NavBar() {
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/products", label: "Products" },
-    { href: "/accessories", label: "Accessories" },
+    { href: "/categories", label: "Categories" },
   ];
 
   return (

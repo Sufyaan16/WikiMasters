@@ -69,7 +69,7 @@ const Hero3 = ({
   buttons = {
     primary: {
       text: "Shop Now",
-      url: "/shop",
+      url: "/products",
     },
     secondary: {
       text: "View Collection",
