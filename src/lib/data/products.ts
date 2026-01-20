@@ -8,6 +8,7 @@ export interface Product {
   id: number;
   name: string;
   company: string;
+  category: string;
   image: {
     src: string;
     alt: string;
@@ -25,6 +26,7 @@ export const CRICKET_BATS: Product[] = [
     id: 1,
     name: "Legend Pro Elite",
     company: "Ihsan",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=800&q=80",
       alt: "Ihsan Legend Pro Elite Cricket Bat",
@@ -44,6 +46,7 @@ export const CRICKET_BATS: Product[] = [
     id: 2,
     name: "Plus 15000",
     company: "CA",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80",
       alt: "CA Plus 15000 Cricket Bat",
@@ -62,6 +65,7 @@ export const CRICKET_BATS: Product[] = [
     id: 3,
     name: "Malik Special Edition",
     company: "MB Malik",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1593766827228-8737b4534aa6?w=800&q=80",
       alt: "MB Malik Special Edition Cricket Bat",
@@ -81,6 +85,7 @@ export const CRICKET_BATS: Product[] = [
     id: 4,
     name: "Ton Reserve Edition",
     company: "SS Sports",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
       alt: "SS Sports Ton Reserve Cricket Bat",
@@ -95,6 +100,7 @@ export const CRICKET_BATS: Product[] = [
     id: 5,
     name: "Dragon Signature",
     company: "Ihsan",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=800&q=80",
       alt: "Ihsan Dragon Signature Cricket Bat",
@@ -110,6 +116,7 @@ export const CRICKET_BATS: Product[] = [
     id: 6,
     name: "Gold Edition 2024",
     company: "CA",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80",
       alt: "CA Gold Edition Cricket Bat",
@@ -129,6 +136,7 @@ export const CRICKET_BATS: Product[] = [
     id: 7,
     name: "Power Drive Pro",
     company: "MB Malik",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1593766827228-8737b4534aa6?w=800&q=80",
       alt: "MB Malik Power Drive Pro Cricket Bat",
@@ -143,6 +151,7 @@ export const CRICKET_BATS: Product[] = [
     id: 8,
     name: "Master Blaster Elite",
     company: "SS Sports",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
       alt: "SS Sports Master Blaster Cricket Bat",
@@ -161,6 +170,7 @@ export const CRICKET_BATS: Product[] = [
     id: 9,
     name: "Royal Crown",
     company: "Ihsan",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=800&q=80",
       alt: "Ihsan Royal Crown Cricket Bat",
@@ -176,6 +186,7 @@ export const CRICKET_BATS: Product[] = [
     id: 10,
     name: "Platinum Series",
     company: "CA",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80",
       alt: "CA Platinum Series Cricket Bat",
@@ -194,6 +205,7 @@ export const CRICKET_BATS: Product[] = [
     id: 11,
     name: "Thunder Strike",
     company: "MB Malik",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1593766827228-8737b4534aa6?w=800&q=80",
       alt: "MB Malik Thunder Strike Cricket Bat",
@@ -213,6 +225,7 @@ export const CRICKET_BATS: Product[] = [
     id: 12,
     name: "Champion Series",
     company: "SS Sports",
+    category: "cricketbats",
     image: {
       src: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
       alt: "SS Sports Champion Series Cricket Bat",
