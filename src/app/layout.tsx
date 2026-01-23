@@ -4,14 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { stackClientApp } from "../stack/client";
 // @ts-ignore
 import "./globals.css";
-import {
-  CONTACT_LINKS,
-  EcommerceFooter1,
-  FOOTER_LINKS,
-  NEWSLETTER_DATA,
-} from "@/components/ecommerce-footer1";
+import { ConditionalLayout } from "@/components/conditional-layout";
 import NavBar from "@/components/nav/nav-bar";
-import { FeaturesSection } from "@/components/features-section";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,33 +34,12 @@ export default function RootLayout({
       >
         <StackProvider app={stackClientApp}>
           <StackTheme>
-            <NavBar />
-            {children}
-            <FeaturesSection />
-            <EcommerceFooter1
-              newsletter={NEWSLETTER_DATA}
-              footerLinks={FOOTER_LINKS}
-              contactLinks={CONTACT_LINKS}
-            />
+            <ConditionalLayout navbar={<NavBar />}>
+              {children}
+            </ConditionalLayout>
           </StackTheme>
         </StackProvider>
       </body>
     </html>
   );
 }
-
-// function ConditionalLayout({ children }: { children: React.ReactNode }) {
-//   if (
-//     typeof window !== "undefined" &&
-//     window.location.pathname.startsWith("/admin")
-//   ) {
-//     return children;
-//   }
-
-//   return (
-//     <>
-//       <NavBar />
-//       {children}
-//     </>
-//   );
-// }
