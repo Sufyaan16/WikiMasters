@@ -4,13 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { CATEGORY_INFO } from "@/lib/data/categories";
+import type { CategoryInfo } from "@/lib/data/categories";
 
 interface CategoryCardsProps {
   className?: string;
+  categories: CategoryInfo[];
 }
 
-function CategoryCard({ category }: { category: typeof CATEGORY_INFO[string] }) {
+function CategoryCard({ category }: { category: CategoryInfo }) {
   const [isHovered, setIsHovered] = useState(false);
   
   const displayImage = isHovered && category.imageHover 
@@ -46,8 +47,7 @@ function CategoryCard({ category }: { category: typeof CATEGORY_INFO[string] }) 
   );
 }
 
-export function CategoryCards({ className }: CategoryCardsProps) {
-  const categories = Object.values(CATEGORY_INFO);
+export function CategoryCards({ className, categories }: CategoryCardsProps) {
 
   return (
     <section className={cn("w-full py-16 px-4 md:px-8 lg:px-20 bg-background", className)}>

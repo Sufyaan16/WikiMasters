@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/db/index";
 import { products } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
-// GET all products
-export async function GET() {
+// GET all products (with optional category filter)
+export async function GET(request: NextRequest) {
   try {
-    const allProducts = await db
-      .select()
-      .from(products)
-      .orderBy(desc(products.createdAt));
+    const searchParams = request.nextUrl.searchParams;
+    const category = searchParams.get("category");
+
+    let query = db.select().from(products);
+
+    // Apply category filter if provided
+    if (category) {
+      query = query.where(eq(products.category, category)) as any;
+    }
+
+    const allProducts = await query.orderBy(desc(products.createdAt));
 
     // Transform database products to match frontend format
     const transformedProducts = allProducts.map((product) => ({

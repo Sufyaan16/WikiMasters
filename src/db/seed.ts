@@ -1,7 +1,7 @@
 import db, { sql } from "@/db/index";
 import { categories, products } from "@/db/schema";
 import { CATEGORY_INFO } from "@/lib/data/categories";
-import { CRICKET_BATS } from "@/lib/data/products";
+import { ALL_PRODUCTS } from "@/lib/data/products";
 
 async function main() {
   try {
@@ -28,7 +28,7 @@ async function main() {
 
     // Seed products
     console.log("🏏 Seeding products...");
-    const productData = CRICKET_BATS.map((product) => ({
+    const productData = ALL_PRODUCTS.map((product) => ({
       name: product.name,
       company: product.company,
       category: product.category,

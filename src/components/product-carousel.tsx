@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Autoplay from "embla-carousel-autoplay";
-import { CRICKET_BATS } from "@/lib/data/products";
+import type { Product } from "@/lib/data/products";
 import { ProductCard } from "@/components/product-card";
 import {
   Carousel,
@@ -15,9 +15,10 @@ import { cn } from "@/lib/utils";
 
 interface ProductCarouselProps {
   className?: string;
+  products: Product[];
 }
 
-export function ProductCarousel({ className }: ProductCarouselProps) {
+export function ProductCarousel({ className, products }: ProductCarouselProps) {
   const plugin = useRef(
     Autoplay({ delay: 3000, stopOnInteraction: true })
   );
@@ -40,7 +41,7 @@ export function ProductCarousel({ className }: ProductCarouselProps) {
           }}
         >
           <CarouselContent className="-ml-4">
-            {CRICKET_BATS.slice(0, 5).map((product) => (
+            {products.map((product) => (
               <CarouselItem key={product.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                 <ProductCard product={product} />
               </CarouselItem>
