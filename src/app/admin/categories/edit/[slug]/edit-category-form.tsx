@@ -66,24 +66,44 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
       type: formData.get("type"),
       description: formData.get("description"),
       longDescription: formData.get("longDescription"),
-      image: formData.get("image"),
-      imageHover: formData.get("imageHover"),
+      image: imagePreview || category.image,
+      imageHover: imageHoverPreview || category.imageHover,
     };
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch(`/api/categories/${category.slug}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(categoryData),
+      });
 
-    setLoading(false);
+      if (!response.ok) {
+        throw new Error("Failed to update category");
+      }
 
-    // Show success message
-    await Swal.fire({
-      title: "Updated!",
-      text: `${categoryData.name} has been updated successfully.`,
-      icon: "success",
-      confirmButtonText: "OK",
-    });
+      setLoading(false);
 
-    router.push("/admin/categories");
+      // Show success message
+      await Swal.fire({
+        title: "Updated!",
+        text: `${categoryData.name} has been updated successfully.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
+      router.push("/admin/categories");
+      router.refresh();
+    } catch (error) {
+      setLoading(false);
+      await Swal.fire({
+        title: "Error!",
+        text: "Failed to update category. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
   };
 
   return (

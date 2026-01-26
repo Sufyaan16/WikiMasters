@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +27,9 @@ interface CategoriesListProps {
   categories: CategoryInfo[];
 }
 
-export function CategoriesList({ categories }: CategoriesListProps) {
+export function CategoriesList({ categories: initialCategories }: CategoriesListProps) {
+  const router = useRouter();
+  const [categories, setCategories] = useState(initialCategories);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "name">("date");
   const [currentPage, setCurrentPage] = useState(1);
@@ -78,14 +81,35 @@ export function CategoriesList({ categories }: CategoriesListProps) {
     });
 
     if (result.isConfirmed) {
-      // TODO: Implement actual delete functionality
-      Swal.fire({
-        title: "Deleted!",
-        text: `${categoryName} has been deleted.`,
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      try {
+        const response = await fetch(`/api/categories/${categorySlug}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete category");
+        }
+
+        // Remove from local state
+        setCategories(categories.filter((c) => c.slug !== categorySlug));
+
+        await Swal.fire({
+          title: "Deleted!",
+          text: `${categoryName} has been deleted.`,
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        // Refresh the page to get updated data
+        router.refresh();
+      } catch (error) {
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to delete category. Please try again.",
+          icon: "error",
+        });
+      }
     }
   };
 

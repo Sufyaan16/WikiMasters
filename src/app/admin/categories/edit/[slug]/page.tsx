@@ -4,7 +4,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { EditCategoryForm } from "./edit-category-form";
-import { CATEGORY_INFO, getCategoryBySlug } from "@/lib/data/categories";
+import db from "@/db/index";
+import { categories } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 interface EditCategoryPageProps {
   params: Promise<{
@@ -21,12 +23,26 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
 
   const { slug } = await params;
 
-  // Find the category
-  const category = getCategoryBySlug(slug);
+  // Fetch category from database
+  const dbCategory = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.slug, slug))
+    .limit(1);
 
-  if (!category) {
+  if (dbCategory.length === 0) {
     notFound();
   }
+
+  // Transform to frontend format
+  const category = {
+    slug: dbCategory[0].slug,
+    name: dbCategory[0].name,
+    description: dbCategory[0].description,
+    longDescription: dbCategory[0].longDescription,
+    image: dbCategory[0].image,
+    imageHover: dbCategory[0].imageHover || undefined,
+  };
 
   return (
     <div className="flex flex-col gap-4 p-4 md:gap-6 md:p-6">

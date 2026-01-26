@@ -55,39 +55,60 @@ export function NewCategoryForm() {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const categoryData = {
-      name: formData.get("name"),
-      slug: formData.get("slug"),
-      type: formData.get("type"),
-      description: formData.get("description"),
-      longDescription: formData.get("longDescription"),
-      image: formData.get("image"),
-      imageHover: formData.get("imageHover"),
-    };
+    try {
+      const formData = new FormData(e.currentTarget);
+      
+      // Create category data object
+      const categoryData = {
+        slug: formData.get("slug") as string,
+        name: formData.get("name") as string,
+        description: formData.get("description") as string,
+        longDescription: formData.get("longDescription") as string,
+        image: imagePreview, // For now using the preview
+        imageHover: imageHoverPreview || null,
+      };
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Send to API
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(categoryData),
+      });
 
-    setLoading(false);
+      if (!response.ok) {
+        throw new Error("Failed to create category");
+      }
 
-    // Show success message
-    const result = await Swal.fire({
-      title: "Success!",
-      text: `${categoryData.name} category has been added successfully.`,
-      icon: "success",
-      confirmButtonText: "View Categories",
-      showCancelButton: true,
-      cancelButtonText: "Add Another",
-    });
+      const newCategory = await response.json();
+      setLoading(false);
 
-    if (result.isConfirmed) {
-      router.push("/admin/categories");
-    } else {
-      // Reset form
-      (e.target as HTMLFormElement).reset();
-      setImagePreview("");
-      setImageHoverPreview("");
+      // Show success message
+      const result = await Swal.fire({
+        title: "Success!",
+        text: `${categoryData.name} category has been added successfully.`,
+        icon: "success",
+        confirmButtonText: "View Categories",
+        showCancelButton: true,
+        cancelButtonText: "Add Another",
+      });
+
+      if (result.isConfirmed) {
+        router.push("/admin/categories");
+      } else {
+        // Reset form
+        (e.target as HTMLFormElement).reset();
+        setImagePreview("");
+        setImageHoverPreview("");
+      }
+    } catch (error) {
+      setLoading(false);
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to create category. Please try again.",
+        icon: "error",
+      });
     }
   };
 
