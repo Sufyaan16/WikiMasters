@@ -1,4 +1,4 @@
-import { boolean, decimal, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, decimal, integer, pgTable, serial, text, timestamp, json } from "drizzle-orm/pg-core";
 
 // Categories Table
 export const categories = pgTable("categories", {
@@ -33,7 +33,57 @@ export const products = pgTable("products", {
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
 
-const schema = { categories, products };
+// Orders Table
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  orderNumber: text("order_number").notNull().unique(),
+  
+  // Customer Information
+  customerName: text("customer_name").notNull(),
+  customerEmail: text("customer_email").notNull(),
+  customerPhone: text("customer_phone"),
+  
+  // Shipping Address
+  shippingAddress: text("shipping_address").notNull(),
+  shippingCity: text("shipping_city").notNull(),
+  shippingState: text("shipping_state").notNull(),
+  shippingZip: text("shipping_zip").notNull(),
+  shippingCountry: text("shipping_country").notNull().default("USA"),
+  
+  // Order Items (stored as JSON array)
+  items: json("items").notNull().$type<Array<{
+    productId: number;
+    productName: string;
+    productImage: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }>>(),
+  
+  // Order Financial Details
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  tax: decimal("tax", { precision: 10, scale: 2 }).notNull().default("0.00"),
+  shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }).notNull().default("0.00"),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").notNull().default("USD"),
+  
+  // Order Status and Management
+  status: text("status").notNull().default("pending"), // pending, processing, shipped, delivered, cancelled, refunded
+  paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid, paid, refunded, failed
+  paymentMethod: text("payment_method"), // credit_card, paypal, cod, etc
+  
+  // Additional Information
+  notes: text("notes"),
+  trackingNumber: text("tracking_number"),
+  
+  // Timestamps
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+  shippedAt: timestamp("shipped_at", { mode: "string" }),
+  deliveredAt: timestamp("delivered_at", { mode: "string" }),
+});
+
+const schema = { categories, products, orders };
 
 export default schema;
 
@@ -43,3 +93,6 @@ export type NewCategory = typeof categories.$inferInsert;
 
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
+
+export type Order = typeof orders.$inferSelect;
+export type NewOrder = typeof orders.$inferInsert;

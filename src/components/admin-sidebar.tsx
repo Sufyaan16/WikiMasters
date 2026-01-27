@@ -6,6 +6,7 @@ import {
   IconCategory,
   IconSettings,
   IconInnerShadowTop,
+  IconShoppingCart,
 } from "@tabler/icons-react";
 import { useUser } from "@stackframe/stack";
 
@@ -30,6 +31,11 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       title: "Dashboard",
       url: "/admin",
       icon: IconHome,
+    },
+    {
+      title: "Orders",
+      url: "/admin/orders",
+      icon: IconShoppingCart,
     },
     {
       title: "Products",
