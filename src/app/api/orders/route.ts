@@ -4,6 +4,8 @@ import { orders } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { createOrderSchema } from "@/lib/validations/order";
+import { resend } from "@/lib/resend";
+import OrderConfirmationEmail from "@/emails/order-confirmation";
 
 // GET all orders
 export async function GET() {
@@ -70,6 +72,43 @@ export async function POST(request: Request) {
           total: validatedData.total.toString(),
         })
         .returning();
+
+      // Send order confirmation email
+      try {
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || 'orders@yourdomain.com',
+          to: validatedData.customerEmail,
+          subject: `Order Confirmation - ${validatedData.orderNumber}`,
+          react: OrderConfirmationEmail({
+            customerName: validatedData.customerName,
+            orderNumber: validatedData.orderNumber,
+            orderDate: new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+            items: validatedData.items.map((item) => ({
+              productName: item.productName,
+              productImage: item.productImage,
+              quantity: item.quantity,
+              price: item.price,
+              total: item.total,
+            })),
+            subtotal: validatedData.subtotal,
+            tax: validatedData.tax,
+            shippingCost: validatedData.shippingCost,
+            total: validatedData.total,
+            shippingAddress: validatedData.shippingAddress,
+            shippingCity: validatedData.shippingCity,
+            shippingState: validatedData.shippingState,
+            shippingZip: validatedData.shippingZip,
+          }),
+        });
+        console.log('✅ Order confirmation email sent to:', validatedData.customerEmail);
+      } catch (emailError) {
+        // Log email error but don't fail the order creation
+        console.error('❌ Failed to send order confirmation email:', emailError);
+      }
 
       return NextResponse.json(newOrder[0], { status: 201 });
     } catch (insertError: any) {

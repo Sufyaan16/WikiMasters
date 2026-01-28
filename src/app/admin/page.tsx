@@ -36,35 +36,6 @@ export default async function AdminDashboard() {
             {/* <DataTable data={data} /> */}
           </div>
         </div>
-
-        {/* Admin Quick Actions */}
-        {/* <div className="grid gap-4 md:grid-cols-2">
-          <Link href="/admin/categories">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Grid3x3 className="h-5 w-5" />
-                  Manage Categories
-                </CardTitle>
-                <CardDescription>
-                  View, add, edit, or delete categories
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5" />
-                  View Store
-                </CardTitle>
-                <CardDescription>Go to the public store front</CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-        </div> */}
       </div>
 
       {/* Recent Activity */}

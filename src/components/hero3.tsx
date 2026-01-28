@@ -73,7 +73,7 @@ const Hero3 = ({
     },
     secondary: {
       text: "View Collection",
-      url: "/collections",
+      url: "/categories",
     },
   },
   reviews = {
