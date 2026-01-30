@@ -3,6 +3,9 @@ import { ProductCarousel } from "@/components/product-carousel";
 import { StatsCounter } from "@/components/stats-counter";
 import { InteractiveCategories } from "@/components/interactive-categories";
 import { TrustMarquee } from "@/components/trust-marquee";
+import { TestimonialsCarousel } from "@/components/testimonials-carousel";
+import { BestSellers } from "@/components/best-sellers";
+import { InstagramFeed } from "@/components/instagram-feed";
 import db from "@/db";
 import { products } from "@/db/schema";
 import { desc } from "drizzle-orm";
@@ -52,7 +55,10 @@ export default async function Home() {
       <TrustMarquee />
       <StatsCounter />
       <InteractiveCategories />
+      <BestSellers products={transformedProducts} />
       <ProductCarousel products={transformedProducts} />
+      <TestimonialsCarousel />
+      <InstagramFeed />
     </>
   );
 }
