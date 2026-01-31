@@ -77,23 +77,23 @@ const NEWSLETTER_DATA = {
 
 const FOOTER_LINKS: FooterLinksSection[] = [
   {
-    title: "Information",
+    title: "Our Products",
     items: [
       {
-        text: "Terms and Conditions",
-        link: "#",
+        text: "Cricket Bats",
+        link: "/products/categories/cricketbats",
       },
       {
-        text: "Privacy Policy",
-        link: "#",
+        text: "Protection Gear",
+        link: "/products/categories/cricketgloves",
       },
       {
-        text: "Warranty Policy",
-        link: "#",
+        text: "Sports Apparel",
+        link: "/products/categories/cricketgear",
       },
       {
-        text: "Terms of Service",
-        link: "#",
+        text: "Cricket Accessories",
+        link: "/products/categories/cricketaccessories",
       },
     ],
   },
@@ -124,8 +124,8 @@ const CONTACT_LINKS: ContactLinks = {
   contactDetails: [
     {
       icon: MapPin,
-      text: "support@store.com",
-      link: "support@store.com",
+      text: "doabasports@gmail.com",
+      link: "mailto:doabasports@gmail.com",
       type: LINK_TYPES.EMAIL_LINK as LinkTypes,
     },
     {
