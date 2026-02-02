@@ -19,7 +19,7 @@ export function CartIcon() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="absolute top-0 right-55 mt-3.5 mr-4">
+        <Button variant="ghost" size="icon" className="absolute top-0 right-45 mt-3.5 mr-4">
           <ShoppingCart className="h-5 w-5" />
           {cartCount > 0 && (
             <Badge
