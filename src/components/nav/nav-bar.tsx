@@ -1,8 +1,6 @@
 import { UserButton } from "@stackframe/stack";
-import { Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -10,6 +8,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { stackServerApp } from "@/stack/server";
 import { CartIcon } from "@/components/cart-icon";
+import { GlobalSearchBar } from "@/components/global-search-bar";
 
 export default async function NavBar() {
   const user = await stackServerApp.getUser();
@@ -49,13 +48,8 @@ export default async function NavBar() {
         </div>
 
         {/* Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-md relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            type="search"
-            placeholder="What are you looking for?"
-            className="w-full pl-10 pr-4 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-          />
+        <div className="hidden md:flex flex-1 max-w-md">
+          <GlobalSearchBar />
         </div>
 
         {/* Cart Icon */}
