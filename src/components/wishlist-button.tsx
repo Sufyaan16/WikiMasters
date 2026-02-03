@@ -5,6 +5,7 @@ import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@stackframe/stack";
 import Swal from "sweetalert2";
+import { motion } from "framer-motion";
 
 interface WishlistButtonProps {
   productId: number;
@@ -170,13 +171,27 @@ export function WishlistButton({
           isInWishlist ? "Remove from wishlist" : "Add to wishlist"
         }
       >
-        <Heart
-          className={`h-5 w-5 transition-all ${
+        <motion.div
+          animate={
             isInWishlist
-              ? "fill-red-500 text-red-500"
-              : "text-gray-400 hover:text-red-500"
-          }`}
-        />
+              ? {
+                  scale: [1, 1.3, 1],
+                }
+              : {}
+          }
+          transition={{
+            duration: 0.4,
+            ease: "easeInOut",
+          }}
+        >
+          <Heart
+            className={`h-5 w-5 transition-colors ${
+              isInWishlist
+                ? "fill-red-500 text-red-500"
+                : "text-gray-400 hover:text-red-500"
+            }`}
+          />
+        </motion.div>
       </Button>
     );
   }
@@ -187,12 +202,27 @@ export function WishlistButton({
       className={className}
       onClick={(e) => handleToggleWishlist(e)}
     >
-      <Heart
-        className={`h-4 w-4 mr-2 ${
-          isInWishlist ? "fill-current" : ""
-        }`}
-      />
-      {isInWishlist ? "In Wishlist" : "Add to Wishlist"}
+      <motion.div
+        animate={
+          isInWishlist
+            ? {
+                scale: [1, 1.2, 1],
+              }
+            : {}
+        }
+        transition={{
+          duration: 0.4,
+          ease: "easeInOut",
+        }}
+        className="flex items-center"
+      >
+        <Heart
+          className={`h-4 w-4 mr-2 transition-colors ${
+            isInWishlist ? "fill-current" : ""
+          }`}
+        />
+        {isInWishlist ? "In Wishlist" : "Add to Wishlist"}
+      </motion.div>
     </Button>
   );
 }
