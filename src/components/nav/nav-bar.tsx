@@ -9,6 +9,7 @@ import {
 import { stackServerApp } from "@/stack/server";
 import { CartIcon } from "@/components/cart-icon";
 import { GlobalSearchBar } from "@/components/global-search-bar";
+import { WishlistIcon } from "@/components/wishlist-icon";
 
 export default async function NavBar() {
   const user = await stackServerApp.getUser();
@@ -51,6 +52,9 @@ export default async function NavBar() {
         <div className="hidden md:flex flex-1 max-w-md">
           <GlobalSearchBar />
         </div>
+
+        {/* Wishlist Icon */}
+        <WishlistIcon />
 
         {/* Cart Icon */}
         <CartIcon />

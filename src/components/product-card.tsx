@@ -17,6 +17,7 @@ import { useCart } from "@/contexts/cart-context";
 import { ShoppingCart } from "lucide-react";
 import Swal from "sweetalert2";
 import { StockBadge } from "@/components/stock-badge";
+import { WishlistButton } from "@/components/wishlist-button";
 
 interface ProductCardProps {
   product: Product;
@@ -88,6 +89,10 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.badge.text}
             </Badge>
           )}
+          {/* Wishlist Button - Top Right */}
+          <div className="absolute end-4 top-4 bg-white rounded-full shadow-md">
+            <WishlistButton productId={product.id} variant="icon" />
+          </div>
         </CardHeader>
         <CardContent className="flex h-full flex-col gap-3 pb-6">
           <CardTitle className="text-base font-semibold">

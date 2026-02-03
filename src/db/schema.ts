@@ -1,4 +1,4 @@
-import { boolean, decimal, integer, pgTable, serial, text, timestamp, json } from "drizzle-orm/pg-core";
+import { boolean, decimal, integer, pgTable, serial, text, timestamp, json, unique } from "drizzle-orm/pg-core";
 
 // Categories Table
 export const categories = pgTable("categories", {
@@ -102,7 +102,24 @@ export const carts = pgTable("carts", {
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
 
-const schema = { categories, products, orders, carts };
+// Wishlists table
+export const wishlists = pgTable(
+  "wishlists",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    addedAt: timestamp("added_at", { mode: "string" }).defaultNow().notNull(),
+    notes: text("notes"),
+  },
+  (table) => ({
+    uniqueUserProduct: unique().on(table.userId, table.productId),
+  })
+);
+
+const schema = { categories, products, orders, carts, wishlists };
 
 export default schema;
 
@@ -118,3 +135,6 @@ export type NewOrder = typeof orders.$inferInsert;
 
 export type Cart = typeof carts.$inferSelect;
 export type NewCart = typeof carts.$inferInsert;
+
+export type Wishlist = typeof wishlists.$inferSelect;
+export type NewWishlist = typeof wishlists.$inferInsert;
