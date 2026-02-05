@@ -311,7 +311,7 @@ export function WishlistPageClient() {
               checked={showOutOfStock}
               onCheckedChange={(checked) => setShowOutOfStock(checked === true)}
             />
-            <Label htmlFor="out-of-stock" className="text-sm cursor-pointer">
+            <Label htmlFor="out-of-stock" className="text-sm cursor-pointer ">
               Out of Stock
             </Label>
           </div>
