@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { stackServerApp } from "@/stack/server";
 import { userMetadataSchema } from "@/lib/validations/user";
+import { createErrorResponse, ErrorCode } from "@/lib/errors";
 
 export type AuthResult = {
   success: false;
@@ -23,10 +24,9 @@ export async function requireAuth(): Promise<AuthResult> {
     if (!user) {
       return {
         success: false,
-        error: NextResponse.json(
-          { error: "Authentication required" },
-          { status: 401 }
-        ),
+        error: createErrorResponse({
+          code: ErrorCode.AUTH_REQUIRED,
+        }),
       };
     }
 
@@ -70,10 +70,12 @@ export async function requireAuth(): Promise<AuthResult> {
     console.error("❌ Auth error:", error);
     return {
       success: false,
-      error: NextResponse.json(
-        { error: "Authentication failed" },
-        { status: 500 }
-      ),
+      error: createErrorResponse({
+        code: ErrorCode.SERVER_ERROR,
+        message: "Authentication failed",
+        details: error instanceof Error ? error.message : undefined,
+        logError: true,
+      }),
     };
   }
 }
@@ -92,10 +94,9 @@ export async function requireAdmin(): Promise<AuthResult> {
   if (authResult.role !== "admin") {
     return {
       success: false,
-      error: NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 }
-      ),
+      error: createErrorResponse({
+        code: ErrorCode.AUTH_ADMIN_REQUIRED,
+      }),
     };
   }
 

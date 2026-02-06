@@ -9,6 +9,13 @@ import OrderConfirmationEmail from "@/emails/order-confirmation";
 import { requireAuth, requireAdmin } from "@/lib/auth-helpers";
 import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
 import { calculateOrderPrices } from "@/lib/price-calculator";
+import {
+  createErrorResponse,
+  handleZodError,
+  handleDatabaseError,
+  handleUnexpectedError,
+  ErrorCode,
+} from "@/lib/errors";
 
 // GET all orders
 export async function GET(request: Request) {
@@ -34,11 +41,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(allOrders);
   } catch (error) {
-    console.error("Error fetching orders:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch orders" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "GET /api/orders");
   }
 }
 
@@ -64,13 +67,7 @@ export async function POST(request: Request) {
     // Validate request body shape
     const validationResult = createOrderSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: validationResult.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
+      return handleZodError(validationResult.error);
     }
 
     const validatedData = validationResult.data;
@@ -92,13 +89,18 @@ export async function POST(request: Request) {
 
     // Check if calculation failed
     if ("error" in priceCalculation) {
-      return NextResponse.json(
-        {
-          error: priceCalculation.error,
-          details: priceCalculation.details,
-        },
-        { status: 400 }
-      );
+      // Map calculation errors to appropriate error codes
+      const errorCode = priceCalculation.error.includes("not found")
+        ? ErrorCode.PRODUCT_NOT_FOUND
+        : priceCalculation.error.includes("stock")
+        ? ErrorCode.PRODUCT_INSUFFICIENT_STOCK
+        : ErrorCode.VALIDATION_FAILED;
+
+      return createErrorResponse({
+        code: errorCode,
+        message: priceCalculation.error,
+        details: priceCalculation.details,
+      });
     }
 
     // Log price discrepancy for fraud detection
@@ -141,13 +143,10 @@ export async function POST(request: Request) {
       .limit(1);
 
     if (existingOrder.length > 0) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: { orderNumber: ["Order number already exists"] },
-        },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.ORDER_ALREADY_EXISTS,
+        details: { orderNumber: validatedData.orderNumber },
+      });
     }
 
     try {
@@ -222,33 +221,24 @@ export async function POST(request: Request) {
     } catch (insertError: any) {
       // Handle database unique constraint violation for orderNumber
       if (insertError?.code === '23505' || insertError?.constraint?.includes('order_number')) {
-        return NextResponse.json(
-          {
-            error: "Validation failed",
-            details: { orderNumber: ["Order number already exists"] },
-          },
-          { status: 400 }
-        );
+        return createErrorResponse({
+          code: ErrorCode.ORDER_ALREADY_EXISTS,
+          details: { orderNumber: validatedData.orderNumber },
+        });
       }
       throw insertError;
     }
   } catch (error) {
-    console.error("Error creating order:", error);
-    
     // Check if it's a Zod error that somehow wasn't caught
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
+      return handleZodError(error);
     }
     
-    return NextResponse.json(
-      { error: "Failed to create order" },
-      { status: 500 }
-    );
+    // Check for database errors
+    if (error && typeof error === "object" && "code" in error) {
+      return handleDatabaseError(error, "POST /api/orders");
+    }
+    
+    return handleUnexpectedError(error, "POST /api/orders");
   }
 }

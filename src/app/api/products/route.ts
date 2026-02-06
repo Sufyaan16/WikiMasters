@@ -6,6 +6,14 @@ import { createProductSchema, productQuerySchema } from "@/lib/validations/produ
 import { ZodError } from "zod";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  handleZodError,
+  handleDatabaseError,
+  handleUnexpectedError,
+  ErrorCode,
+} from "@/lib/errors";
 
 // GET all products (with pagination and filters)
 export async function GET(request: NextRequest) {
@@ -31,11 +39,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!queryValidation.success) {
-      const errors = queryValidation.error.flatten().fieldErrors;
-      return NextResponse.json(
-        { error: "Invalid query parameters", details: errors },
-        { status: 400 }
-      );
+      return handleZodError(queryValidation.error);
     }
 
     const { category, search, page, limit, sortBy } = queryValidation.data;
@@ -146,11 +150,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("Error fetching products:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch products" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "GET /api/products");
   }
 }
 
@@ -177,11 +177,7 @@ export async function POST(request: NextRequest) {
     const validated = createProductSchema.safeParse(body);
     
     if (!validated.success) {
-      const errors = validated.error.flatten().fieldErrors;
-      return NextResponse.json(
-        { error: "Validation failed", details: errors },
-        { status: 400 }
-      );
+      return handleZodError(validated.error);
     }
 
     const validatedData = validated.data;
@@ -213,15 +209,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newProduct[0], { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.flatten().fieldErrors },
-        { status: 400 }
-      );
+      return handleZodError(error);
     }
-    console.error("Error creating product:", error);
-    return NextResponse.json(
-      { error: "Failed to create product" },
-      { status: 500 }
-    );
+    // Check for database errors
+    if (error && typeof error === "object" && "code" in error) {
+      return handleDatabaseError(error, "POST /api/products");
+    }
+    return handleUnexpectedError(error, "POST /api/products");
   }
 }

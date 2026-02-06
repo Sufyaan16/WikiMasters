@@ -1,6 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
+import { createErrorResponse, ErrorCode } from "@/lib/errors";
 
 // Initialize Redis client
 // NOTE: Add these to your .env.local:
@@ -85,23 +86,14 @@ export async function checkRateLimit(
     const { success, limit, reset, remaining } = await ratelimiters[tier]!.limit(identifier);
 
     if (!success) {
-      return NextResponse.json(
-        {
-          error: "Rate limit exceeded",
-          message: "Too many requests. Please try again later.",
+      return createErrorResponse({
+        code: ErrorCode.RATE_LIMIT_EXCEEDED,
+        details: {
           limit,
           remaining: 0,
           reset: new Date(reset).toISOString(),
         },
-        {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": new Date(reset).toISOString(),
-          },
-        }
-      );
+      });
     }
 
     return null;

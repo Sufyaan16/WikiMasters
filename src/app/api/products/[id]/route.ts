@@ -4,6 +4,13 @@ import { products } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { updateProductSchema } from "@/lib/validations/product";
 import { requireAdmin } from "@/lib/auth-helpers";
+import {
+  createErrorResponse,
+  handleZodError,
+  handleDatabaseError,
+  handleUnexpectedError,
+  ErrorCode,
+} from "@/lib/errors";
 
 // GET single product
 export async function GET(
@@ -19,10 +26,9 @@ export async function GET(
       .limit(1);
 
     if (product.length === 0) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.PRODUCT_NOT_FOUND,
+      });
     }
 
     // Transform to frontend format
@@ -58,11 +64,7 @@ export async function GET(
 
     return NextResponse.json(transformed);
   } catch (error) {
-    console.error("Error fetching product:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch product" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "GET /api/products/[id]");
   }
 }
 
@@ -85,11 +87,7 @@ export async function PUT(
     const validated = updateProductSchema.safeParse(body);
     
     if (!validated.success) {
-      const errors = validated.error.flatten().fieldErrors;
-      return NextResponse.json(
-        { error: "Validation failed", details: errors },
-        { status: 400 }
-      );
+      return handleZodError(validated.error);
     }
 
     const validatedData = validated.data;
@@ -125,19 +123,17 @@ export async function PUT(
       .returning();
 
     if (updated.length === 0) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.PRODUCT_NOT_FOUND,
+      });
     }
 
     return NextResponse.json(updated[0]);
   } catch (error) {
-    console.error("Error updating product:", error);
-    return NextResponse.json(
-      { error: "Failed to update product" },
-      { status: 500 }
-    );
+    if (error && typeof error === "object" && "code" in error) {
+      return handleDatabaseError(error, "PUT /api/products/[id]");
+    }
+    return handleUnexpectedError(error, "PUT /api/products/[id]");
   }
 }
 
@@ -160,18 +156,16 @@ export async function DELETE(
       .returning();
 
     if (deleted.length === 0) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.PRODUCT_NOT_FOUND,
+      });
     }
 
     return NextResponse.json({ message: "Product deleted successfully" });
   } catch (error) {
-    console.error("Error deleting product:", error);
-    return NextResponse.json(
-      { error: "Failed to delete product" },
-      { status: 500 }
-    );
+    if (error && typeof error === "object" && "code" in error) {
+      return handleDatabaseError(error, "DELETE /api/products/[id]");
+    }
+    return handleUnexpectedError(error, "DELETE /api/products/[id]");
   }
 }
