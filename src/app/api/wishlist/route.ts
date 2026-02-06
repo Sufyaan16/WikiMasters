@@ -4,6 +4,7 @@ import { wishlists, products } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { stackServerApp } from "@/stack/server";
 import { requireAuth } from "@/lib/auth-helpers";
+import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
 
 // GET - Fetch user's wishlist
 export async function GET(req: NextRequest) {
@@ -11,6 +12,14 @@ export async function GET(req: NextRequest) {
   const authResult = await requireAuth();
   if (!authResult.success) {
     return authResult.error;
+  }
+
+  // Rate limit - moderate (60/min)
+  const ipAddress = getIpAddress(req);
+  const rateLimitId = getRateLimitIdentifier(authResult.userId, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "moderate");
+  if (rateLimitResult) {
+    return rateLimitResult;
   }
 
   const userId = authResult.userId;
@@ -79,6 +88,14 @@ export async function POST(req: NextRequest) {
   const authResult = await requireAuth();
   if (!authResult.success) {
     return authResult.error;
+  }
+
+  // Rate limit - strict (10/min for mutations)
+  const ipAddress = getIpAddress(req);
+  const rateLimitId = getRateLimitIdentifier(authResult.userId, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "strict");
+  if (rateLimitResult) {
+    return rateLimitResult;
   }
 
   const userId = authResult.userId;

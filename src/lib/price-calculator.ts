@@ -1,0 +1,156 @@
+import db from "@/db";
+import { products } from "@/db/schema";
+import { eq } from "drizzle-orm";
+
+export interface OrderItem {
+  productId: number;
+  quantity: number;
+}
+
+export interface CalculatedOrderItem extends OrderItem {
+  productName: string;
+  productImage: string;
+  price: number; // Actual current price from database
+  total: number; // price * quantity
+}
+
+export interface OrderCalculation {
+  items: CalculatedOrderItem[];
+  subtotal: number;
+  tax: number;
+  taxRate: number;
+  shippingCost: number;
+  total: number;
+}
+
+export interface PriceCalculationError {
+  error: string;
+  details?: any;
+}
+
+/**
+ * Calculate order prices server-side - NEVER trust client prices
+ * @param items - Array of product IDs and quantities
+ * @param taxRate - Tax rate (e.g., 0.08 for 8%)
+ * @param shippingCost - Shipping cost
+ * @returns Calculated order with actual prices or error
+ */
+export async function calculateOrderPrices(
+  items: OrderItem[],
+  taxRate: number = 0.08,
+  shippingCost: number = 0
+): Promise<OrderCalculation | PriceCalculationError> {
+  try {
+    if (!items || items.length === 0) {
+      return {
+        error: "Order must contain at least one item",
+      };
+    }
+
+    const calculatedItems: CalculatedOrderItem[] = [];
+    let subtotal = 0;
+
+    // Fetch and calculate price for each item
+    for (const item of items) {
+      if (!item.productId || item.quantity <= 0) {
+        return {
+          error: "Invalid item in order",
+          details: { productId: item.productId, quantity: item.quantity },
+        };
+      }
+
+      // Fetch current product price from database
+      const [product] = await db
+        .select({
+          id: products.id,
+          name: products.name,
+          imageSrc: products.imageSrc,
+          priceRegular: products.priceRegular,
+          priceSale: products.priceSale,
+          stockQuantity: products.stockQuantity,
+          trackInventory: products.trackInventory,
+        })
+        .from(products)
+        .where(eq(products.id, item.productId))
+        .limit(1);
+
+      if (!product) {
+        return {
+          error: "Product not found",
+          details: { productId: item.productId },
+        };
+      }
+
+      // Check stock availability
+      if (product.trackInventory) {
+        const availableStock = product.stockQuantity || 0;
+        if (availableStock < item.quantity) {
+          return {
+            error: "Insufficient stock",
+            details: {
+              productName: product.name,
+              requested: item.quantity,
+              available: availableStock,
+            },
+          };
+        }
+      }
+
+      // Calculate actual price (use sale price if available)
+      const actualPrice = product.priceSale
+        ? parseFloat(product.priceSale)
+        : parseFloat(product.priceRegular);
+
+      if (isNaN(actualPrice) || actualPrice < 0) {
+        return {
+          error: "Invalid product price",
+          details: { productId: item.productId, productName: product.name },
+        };
+      }
+
+      const itemTotal = actualPrice * item.quantity;
+      subtotal += itemTotal;
+
+      calculatedItems.push({
+        productId: product.id,
+        productName: product.name,
+        productImage: product.imageSrc,
+        quantity: item.quantity,
+        price: actualPrice,
+        total: itemTotal,
+      });
+    }
+
+    // Calculate tax and total
+    const tax = subtotal * taxRate;
+    const total = subtotal + tax + shippingCost;
+
+    return {
+      items: calculatedItems,
+      subtotal: Math.round(subtotal * 100) / 100,
+      tax: Math.round(tax * 100) / 100,
+      taxRate,
+      shippingCost: Math.round(shippingCost * 100) / 100,
+      total: Math.round(total * 100) / 100,
+    };
+  } catch (error) {
+    console.error("❌ Price calculation error:", error);
+    return {
+      error: "Failed to calculate order prices",
+      details: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Validate that client-provided prices match server calculation
+ * Use this to detect tampering attempts
+ */
+export function validateClientPrices(
+  clientTotal: number,
+  serverCalculation: OrderCalculation,
+  tolerance: number = 0.01 // Allow 1 cent difference for rounding
+): boolean {
+  const difference = Math.abs(clientTotal - serverCalculation.total);
+  return difference <= tolerance;
+}

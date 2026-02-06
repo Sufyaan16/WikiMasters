@@ -11,12 +11,21 @@ import {
   MAX_ITEM_QUANTITY,
 } from "@/lib/validations/cart";
 import { requireAuth } from "@/lib/auth-helpers";
+import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
 // GET /api/cart - Get user's cart
-export async function GET() {
+export async function GET(request: Request) {
   // Protect route - authenticated users only
   const authResult = await requireAuth();
   if (!authResult.success) {
     return authResult.error;
+  }
+
+  // Rate limit - moderate (60/min)
+  const ipAddress = getIpAddress(request);
+  const rateLimitId = getRateLimitIdentifier(authResult.userId, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "moderate");
+  if (rateLimitResult) {
+    return rateLimitResult;
   }
 
   try {

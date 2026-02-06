@@ -5,9 +5,17 @@ import { desc, eq, sql, like, or, and, SQL } from "drizzle-orm";
 import { createProductSchema, productQuerySchema } from "@/lib/validations/product";
 import { ZodError } from "zod";
 import { requireAdmin } from "@/lib/auth-helpers";
+import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
 
 // GET all products (with pagination and filters)
 export async function GET(request: NextRequest) {
+  // Rate limit - relaxed (100/min for browsing products)
+  const ipAddress = getIpAddress(request);
+  const rateLimitResult = await checkRateLimit(`ip:${ipAddress}`, "relaxed");
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     
@@ -152,6 +160,14 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAdmin();
   if (!authResult.success) {
     return authResult.error;
+  }
+
+  // Rate limit - strict (10/min for mutations)
+  const ipAddress = getIpAddress(request);
+  const rateLimitId = getRateLimitIdentifier(authResult.userId, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "strict");
+  if (rateLimitResult) {
+    return rateLimitResult;
   }
 
   try {
