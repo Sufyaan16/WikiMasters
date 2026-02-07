@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Package, User, MapPin, CreditCard, Truck } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, CreditCard, Truck, Loader2 } from "lucide-react";
 import type { Order } from "@/db/schema";
 import Swal from "sweetalert2";
 
@@ -62,8 +62,12 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
   const [refundAmount, setRefundAmount] = useState("");
   const [restoreInventory, setRestoreInventory] = useState(true);
   const [isRefunding, setIsRefunding] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
+  const [isUpdatingTracking, setIsUpdatingTracking] = useState(false);
 
   const handleUpdateTracking = async () => {
+    setIsUpdatingTracking(true);
     try {
       const response = await fetch(`/api/orders/${order.id}`, {
         method: "PUT",
@@ -88,10 +92,13 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
         text: "Failed to update tracking number.",
         icon: "error",
       });
+    } finally {
+      setIsUpdatingTracking(false);
     }
   };
 
   const handleUpdateStatus = async () => {
+    setIsUpdatingStatus(true);
     try {
       const response = await fetch(`/api/orders/${order.id}`, {
         method: "PUT",
@@ -118,10 +125,13 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
         text: "Failed to update order status.",
         icon: "error",
       });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
   const handleUpdatePaymentStatus = async () => {
+    setIsUpdatingPayment(true);
     try {
       const response = await fetch(`/api/orders/${order.id}`, {
         method: "PUT",
@@ -148,6 +158,8 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
         text: "Failed to update payment status.",
         icon: "error",
       });
+    } finally {
+      setIsUpdatingPayment(false);
     }
   };
 
@@ -308,7 +320,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                       <DialogTitle>Process Refund</DialogTitle>
                       <DialogDescription>
                         Process a full or partial refund for order {order.orderNumber}.
-                        Total order amount: ${order.total.toFixed(2)}
+                        Total order amount: ${parseFloat(order.total).toFixed(2)}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -337,7 +349,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                         <Input
                           id="refund-amount"
                           type="number"
-                          placeholder={`Leave empty for full refund ($${order.total.toFixed(2)})`}
+                          placeholder={`Leave empty for full refund ($${parseFloat(order.total).toFixed(2)})`}
                           value={refundAmount}
                           onChange={(e) => setRefundAmount(e.target.value)}
                           step="0.01"
@@ -345,7 +357,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                           max={order.total}
                         />
                         <p className="text-xs text-muted-foreground">
-                          Leave empty to refund full amount. Max: ${order.total.toFixed(2)}
+                          Leave empty to refund full amount. Max: ${parseFloat(order.total).toFixed(2)}
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -534,12 +546,20 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
+                
                 <Button
                   className="w-full mt-2"
                   onClick={handleUpdateStatus}
-                  disabled={status === order.status}
+                  disabled={status === order.status || isUpdatingStatus}
                 >
-                  Update Status
+                  {isUpdatingStatus ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Status"
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -606,9 +626,16 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                       await handleUpdatePaymentStatus();
                     }
                   }}
-                  disabled={paymentStatus === order.paymentStatus}
+                  disabled={paymentStatus === order.paymentStatus || isUpdatingPayment}
                 >
-                  Update Payment Status
+                  {isUpdatingPayment ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Payment Status"
+                  )}
                 </Button>
               </div>
 
@@ -641,9 +668,16 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                 <Button
                   className="w-full mt-2"
                   onClick={handleUpdateTracking}
-                  disabled={trackingNumber === order.trackingNumber}
+                  disabled={trackingNumber === order.trackingNumber || isUpdatingTracking}
                 >
-                  Update Tracking
+                  {isUpdatingTracking ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Tracking"
+                  )}
                 </Button>
               </div>
             </CardContent>
