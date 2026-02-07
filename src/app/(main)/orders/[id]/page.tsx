@@ -9,8 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Package, Truck, MapPin, CreditCard, User } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Package, Truck, MapPin, CreditCard, User, XCircle } from "lucide-react";
 import type { Order } from "@/db/schema";
+import { toast } from "sonner";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-500",
@@ -35,6 +47,7 @@ export default function CustomerOrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -82,6 +95,39 @@ export default function CustomerOrderDetailPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+
+    setCancelling(true);
+    try {
+      const response = await fetch(`/api/orders/${order.id}/cancel`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Order Cancelled", {
+          description: data.message || "Your order has been cancelled successfully.",
+        });
+        // Update local order state
+        setOrder({ ...order, status: "cancelled" });
+        router.refresh();
+      } else {
+        toast.error("Cancellation Failed", {
+          description: data.message || "Failed to cancel order. Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      toast.error("Error", {
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setCancelling(false);
+    }
   };
 
   if (!user || unauthorized) {
@@ -150,6 +196,42 @@ export default function CustomerOrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Order Button */}
+      {(order.status === "pending" || order.status === "processing") && (
+        <div className="mb-6">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={cancelling}>
+                <XCircle className="h-4 w-4 mr-2" />
+                {cancelling ? "Cancelling..." : "Cancel Order"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel Order?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to cancel this order? This action cannot be undone.
+                  {order.paymentStatus === "paid" && (
+                    <span className="block mt-2 font-semibold">
+                      Note: If this order was paid, inventory will be automatically restored.
+                    </span>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>No, keep order</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancelOrder}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Yes, cancel order
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Order Items */}

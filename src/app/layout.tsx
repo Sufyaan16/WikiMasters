@@ -2,6 +2,7 @@ import { StackProvider, StackTheme } from "@stackframe/stack";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { stackClientApp } from "../stack/client";
+import { Toaster } from "@/components/ui/sonner";
 // @ts-ignore
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
         <StackProvider app={stackClientApp}>
           <StackTheme>{children}</StackTheme>
         </StackProvider>
+        <Toaster />
       </body>
     </html>
   );

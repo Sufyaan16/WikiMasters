@@ -8,6 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -46,6 +57,11 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
   const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber || "");
   const [status, setStatus] = useState(order.status);
   const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus);
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [refundReason, setRefundReason] = useState("");
+  const [refundAmount, setRefundAmount] = useState("");
+  const [restoreInventory, setRestoreInventory] = useState(true);
+  const [isRefunding, setIsRefunding] = useState(false);
 
   const handleUpdateTracking = async () => {
     try {
@@ -136,47 +152,73 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
   };
 
   const handleRefund = async () => {
-    const result = await Swal.fire({
-      title: "Confirm Refund",
-      text: "Are you sure you want to refund this order?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, refund it",
-      cancelButtonText: "Cancel",
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      const response = await fetch(`/api/orders/${order.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "refunded",
-          paymentStatus: "refunded",
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to refund order");
-
-      setOrder({ ...order, status: "refunded", paymentStatus: "refunded" });
-      setStatus("refunded");
-
+    if (refundReason.trim().length < 10) {
       await Swal.fire({
-        title: "Refunded!",
-        text: "Order has been refunded successfully.",
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-      });
-
-      router.refresh();
-    } catch (error) {
-      await Swal.fire({
-        title: "Error!",
-        text: "Failed to refund order.",
+        title: "Invalid Input",
+        text: "Refund reason must be at least 10 characters.",
         icon: "error",
       });
+      return;
+    }
+
+    setIsRefunding(true);
+    try {
+      const body: any = {
+        reason: refundReason,
+        restoreInventory,
+      };
+
+      // Add refund amount if specified
+      if (refundAmount && parseFloat(refundAmount) > 0) {
+        body.refundAmount = parseFloat(refundAmount);
+      }
+
+      const response = await fetch(`/api/orders/${order.id}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setOrder({ ...order, status: "refunded", paymentStatus: "refunded" });
+        setStatus("refunded");
+        setPaymentStatus("refunded");
+        setRefundDialogOpen(false);
+        setRefundReason("");
+        setRefundAmount("");
+
+        await Swal.fire({
+          title: "Refunded!",
+          html: `
+            <p>${data.message}</p>
+            <p class="text-sm text-muted-foreground mt-2">
+              Amount: $${data.data.refundAmount} ${data.data.currency}
+            </p>
+            ${data.data.note ? `<p class="text-xs text-yellow-600 mt-2">${data.data.note}</p>` : ''}
+          `,
+          icon: "success",
+          timer: 5000,
+        });
+
+        router.refresh();
+      } else {
+        await Swal.fire({
+          title: "Refund Failed",
+          text: data.message || "Failed to process refund.",
+          icon: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error processing refund:", error);
+      await Swal.fire({
+        title: "Error!",
+        text: "Failed to process refund. Please try again.",
+        icon: "error",
+      });
+    } finally {
+      setIsRefunding(false);
     }
   };
 
@@ -236,11 +278,11 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mt-4">
           <Link href="/admin/orders">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Orders
+              <ArrowLeft className="h-4 w-4" />
+              {/* Back to Orders */}
             </Button>
           </Link>
           <div>
@@ -257,9 +299,102 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                 Cancel Order
               </Button>
               {order.paymentStatus === "paid" && (
-                <Button variant="outline" onClick={handleRefund}>
-                  Refund Order
-                </Button>
+                <Dialog open={refundDialogOpen} onOpenChange={setRefundDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Refund Order</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[525px]">
+                    <DialogHeader>
+                      <DialogTitle>Process Refund</DialogTitle>
+                      <DialogDescription>
+                        Process a full or partial refund for order {order.orderNumber}.
+                        Total order amount: ${order.total.toFixed(2)}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="refund-reason">
+                          Refund Reason <span className="text-red-500">*</span>
+                        </Label>
+                        <Textarea
+                          id="refund-reason"
+                          placeholder="Enter reason for refund (minimum 10 characters)..."
+                          value={refundReason}
+                          onChange={(e) => setRefundReason(e.target.value)}
+                          minLength={10}
+                          maxLength={500}
+                          rows={4}
+                          required
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {refundReason.length}/500 characters (min. 10)
+                        </p>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="refund-amount">
+                          Refund Amount (Optional)
+                        </Label>
+                        <Input
+                          id="refund-amount"
+                          type="number"
+                          placeholder={`Leave empty for full refund ($${order.total.toFixed(2)})`}
+                          value={refundAmount}
+                          onChange={(e) => setRefundAmount(e.target.value)}
+                          step="0.01"
+                          min="0.01"
+                          max={order.total}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Leave empty to refund full amount. Max: ${order.total.toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="restore-inventory"
+                          checked={restoreInventory}
+                          onCheckedChange={(checked) =>
+                            setRestoreInventory(checked === true)
+                          }
+                        />
+                        <Label
+                          htmlFor="restore-inventory"
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          Restore inventory for refunded items
+                        </Label>
+                      </div>
+                      <div className="rounded-md bg-yellow-50 p-3 border border-yellow-200">
+                        <p className="text-xs text-yellow-800">
+                          <strong>Note:</strong> This will update the order status to "refunded". 
+                          You'll need to process the actual payment refund through your payment gateway 
+                          (Stripe, PayPal, etc.) separately.
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setRefundDialogOpen(false);
+                          setRefundReason("");
+                          setRefundAmount("");
+                          setRestoreInventory(true);
+                        }}
+                        disabled={isRefunding}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleRefund}
+                        disabled={isRefunding || refundReason.trim().length < 10}
+                      >
+                        {isRefunding ? "Processing..." : "Process Refund"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               )}
             </>
           )}
@@ -396,6 +531,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                     <SelectItem value="processing">Processing</SelectItem>
                     <SelectItem value="shipped">Shipped</SelectItem>
                     <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button

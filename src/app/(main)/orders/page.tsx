@@ -36,15 +36,12 @@ export default function CustomerOrdersPage() {
       if (!user?.primaryEmail) return;
 
       try {
-        const response = await fetch("/api/orders");
+        const response = await fetch("/api/orders/my-orders");
         if (!response.ok) throw new Error("Failed to fetch orders");
 
-        const allOrders = await response.json();
-        // Filter orders by customer email
-        const customerOrders = allOrders.filter(
-          (order: Order) => order.customerEmail === user.primaryEmail
-        );
-        setOrders(customerOrders);
+        const data = await response.json();
+        // Use the orders from the response
+        setOrders(data.orders || []);
       } catch (error) {
         console.error("Error fetching orders:", error);
       } finally {
