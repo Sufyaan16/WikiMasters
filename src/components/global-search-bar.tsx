@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Loader2, ArrowRight, Package } from "lucide-react";
 import Link from "next/link";
 import { Product } from "@/lib/data/products";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface SearchResult {
   results: Product[];
@@ -27,21 +28,20 @@ export function GlobalSearchBar() {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced search
+  // Debounced search using custom hook
+  const debouncedQuery = useDebounce(query, 300);
+
+  // Fetch search results when debounced query changes
   useEffect(() => {
-    if (query.trim().length < 2) {
+    if (debouncedQuery.trim().length < 2) {
       setResults([]);
       setTotalCount(0);
       setIsOpen(false);
       return;
     }
 
-    const timer = setTimeout(() => {
-      fetchSearchResults(query);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query]);
+    fetchSearchResults(debouncedQuery);
+  }, [debouncedQuery]);
 
   // Fetch search results
   const fetchSearchResults = async (searchQuery: string) => {

@@ -8,9 +8,14 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get("q");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = parseInt(searchParams.get("limit") || "12");
     const page = parseInt(searchParams.get("page") || "1");
     const category = searchParams.get("category");
+    const sortBy = searchParams.get("sortBy") || "relevance";
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
+    const brands = searchParams.get("brands"); // comma-separated
+    const stockStatus = searchParams.get("stockStatus"); // in-stock, out-of-stock, all
 
     // Validate query parameter
     if (!query || query.trim().length < 2) {
@@ -24,18 +29,63 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build where conditions
-    const searchConditions = or(
-      ilike(products.name, searchTerm),
-      ilike(products.company, searchTerm),
-      ilike(products.description, searchTerm),
-      ilike(products.sku, searchTerm),
-      ilike(products.category, searchTerm)
-    );
+    const conditions: any[] = [
+      or(
+        ilike(products.name, searchTerm),
+        ilike(products.company, searchTerm),
+        ilike(products.description, searchTerm),
+        ilike(products.sku, searchTerm),
+        ilike(products.category, searchTerm)
+      )
+    ];
 
     // Add category filter if provided
-    const whereClause = category
-      ? and(searchConditions, sql`${products.category} = ${category}`)
-      : searchConditions;
+    if (category && category !== "all") {
+      conditions.push(sql`${products.category} = ${category}`);
+    }
+
+    // Add price range filter
+    if (minPrice) {
+      const min = parseFloat(minPrice);
+      conditions.push(
+        sql`COALESCE(CAST(${products.priceSale} AS DECIMAL), CAST(${products.priceRegular} AS DECIMAL)) >= ${min}`
+      );
+    }
+    if (maxPrice) {
+      const max = parseFloat(maxPrice);
+      conditions.push(
+        sql`COALESCE(CAST(${products.priceSale} AS DECIMAL), CAST(${products.priceRegular} AS DECIMAL)) <= ${max}`
+      );
+    }
+
+    // Add brand filter
+    if (brands && brands !== "all") {
+      const brandList = brands.split(",").map(b => b.trim());
+      if (brandList.length > 0) {
+        conditions.push(sql`${products.company} = ANY(${brandList})`);
+      }
+    }
+
+    // Add stock status filter
+    if (stockStatus && stockStatus !== "all") {
+      if (stockStatus === "in-stock") {
+        conditions.push(
+          and(
+            sql`${products.trackInventory} = true`,
+            sql`COALESCE(${products.stockQuantity}, 0) > 0`
+          )!
+        );
+      } else if (stockStatus === "out-of-stock") {
+        conditions.push(
+          and(
+            sql`${products.trackInventory} = true`,
+            sql`COALESCE(${products.stockQuantity}, 0) = 0`
+          )!
+        );
+      }
+    }
+
+    const whereClause = and(...conditions);
 
     // Get total count
     const [{ count: totalCount }] = await db
@@ -43,7 +93,41 @@ export async function GET(request: NextRequest) {
       .from(products)
       .where(whereClause);
 
-    // Get search results with relevance scoring
+    // Get search results with relevance scoring and sorting
+    let orderByClause;
+    
+    switch (sortBy) {
+      case "price-low":
+        orderByClause = [
+          sql`COALESCE(CAST(${products.priceSale} AS DECIMAL), CAST(${products.priceRegular} AS DECIMAL)) ASC`,
+          desc(products.id)
+        ];
+        break;
+      case "price-high":
+        orderByClause = [
+          sql`COALESCE(CAST(${products.priceSale} AS DECIMAL), CAST(${products.priceRegular} AS DECIMAL)) DESC`,
+          desc(products.id)
+        ];
+        break;
+      case "newest":
+        orderByClause = [desc(products.id)];
+        break;
+      case "relevance":
+      default:
+        orderByClause = [
+          sql`
+            CASE 
+              WHEN LOWER(${products.name}) = LOWER(${query.trim()}) THEN 1
+              WHEN ${products.name} ILIKE ${searchTerm} THEN 2
+              WHEN ${products.sku} ILIKE ${searchTerm} THEN 3
+              WHEN ${products.company} ILIKE ${searchTerm} THEN 4
+              ELSE 5
+            END
+          `,
+          desc(products.id)
+        ];
+    }
+
     const searchResults = await db
       .select({
         id: products.id,
@@ -64,20 +148,10 @@ export async function GET(request: NextRequest) {
         stockQuantity: products.stockQuantity,
         lowStockThreshold: products.lowStockThreshold,
         trackInventory: products.trackInventory,
-        // Relevance score: lower is better (1 = exact name match, 5 = description match)
-        relevance: sql<number>`
-          CASE 
-            WHEN LOWER(${products.name}) = LOWER(${query.trim()}) THEN 1
-            WHEN ${products.name} ILIKE ${searchTerm} THEN 2
-            WHEN ${products.sku} ILIKE ${searchTerm} THEN 3
-            WHEN ${products.company} ILIKE ${searchTerm} THEN 4
-            ELSE 5
-          END
-        `.as('relevance'),
       })
       .from(products)
       .where(whereClause)
-      .orderBy(sql`relevance ASC`, desc(products.id))
+      .orderBy(...orderByClause)
       .limit(limit)
       .offset(offset);
 

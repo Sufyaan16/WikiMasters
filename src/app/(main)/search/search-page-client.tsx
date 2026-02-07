@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -63,9 +64,13 @@ export function SearchPageClient() {
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [stockStatus, setStockStatus] = useState<string[]>(["all"]);
+  const [stockStatus, setStockStatus] = useState<string>("all");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<"relevance" | "price-low" | "price-high" | "newest">("relevance");
+
+  // Debounce filter changes to reduce API calls
+  const debouncedPriceRange = useDebounce(priceRange, 500);
+  const debouncedBrands = useDebounce(selectedBrands, 300);
 
   // Extract unique categories and brands from products
   const categories = useMemo(() => {
@@ -78,7 +83,7 @@ export function SearchPageClient() {
     return Array.from(brandSet).sort();
   }, [products]);
 
-  // Fetch search results
+  // Fetch search results with all filters applied on server
   useEffect(() => {
     if (query.trim().length < 2) return;
 
@@ -89,10 +94,25 @@ export function SearchPageClient() {
           q: query,
           page: currentPage.toString(),
           limit: PRODUCTS_PER_PAGE.toString(),
+          sortBy,
         });
 
+        // Add filters to query params
         if (selectedCategory !== "all") {
           params.set("category", selectedCategory);
+        }
+
+        if (debouncedPriceRange[0] > 0 || debouncedPriceRange[1] < 1000) {
+          params.set("minPrice", debouncedPriceRange[0].toString());
+          params.set("maxPrice", debouncedPriceRange[1].toString());
+        }
+
+        if (stockStatus !== "all") {
+          params.set("stockStatus", stockStatus);
+        }
+
+        if (debouncedBrands.length > 0) {
+          params.set("brands", debouncedBrands.join(","));
         }
 
         const response = await fetch(`/api/products/search?${params.toString()}`);
@@ -111,57 +131,11 @@ export function SearchPageClient() {
     };
 
     fetchResults();
-  }, [query, currentPage, selectedCategory]);
+  }, [query, currentPage, selectedCategory, sortBy, debouncedPriceRange, stockStatus, debouncedBrands]);
 
-  // Client-side filtering and sorting
-  const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...products];
-
-    // Price range filter
-    filtered = filtered.filter(
-      (p) =>
-        (p.price.sale || p.price.regular) >= priceRange[0] &&
-        (p.price.sale || p.price.regular) <= priceRange[1]
-    );
-
-    // Stock status filter
-    if (!stockStatus.includes("all")) {
-      filtered = filtered.filter((p) => {
-        if (stockStatus.includes("in-stock")) {
-          return p.trackInventory && (p.stockQuantity || 0) > 0;
-        }
-        if (stockStatus.includes("out-of-stock")) {
-          return p.trackInventory && (p.stockQuantity || 0) === 0;
-        }
-        return true;
-      });
-    }
-
-    // Brand filter
-    if (selectedBrands.length > 0) {
-      filtered = filtered.filter((p) => selectedBrands.includes(p.company));
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      const priceA = a.price.sale || a.price.regular;
-      const priceB = b.price.sale || b.price.regular;
-
-      switch (sortBy) {
-        case "price-low":
-          return priceA - priceB;
-        case "price-high":
-          return priceB - priceA;
-        case "newest":
-          return b.id - a.id;
-        case "relevance":
-        default:
-          return 0; // Keep API relevance order
-      }
-    });
-
-    return filtered;
-  }, [products, priceRange, stockStatus, selectedBrands, sortBy]);
+  // Client-side filtering is NO LONGER needed - all filtering done on server
+  // Just use the products directly from API
+  const filteredAndSortedProducts = products;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,36 +146,31 @@ export function SearchPageClient() {
   };
 
   const handleStockStatusChange = (value: string) => {
-    setStockStatus((prev) => {
-      if (value === "all") return ["all"];
-      const newStatus = prev.filter((s) => s !== "all");
-      if (newStatus.includes(value)) {
-        const filtered = newStatus.filter((s) => s !== value);
-        return filtered.length === 0 ? ["all"] : filtered;
-      }
-      return [...newStatus, value];
-    });
+    setStockStatus(value);
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const handleBrandChange = (brand: string) => {
     setSelectedBrands((prev) =>
       prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
     );
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const clearFilters = () => {
     setSelectedCategory("all");
     setPriceRange([0, 1000]);
-    setStockStatus(["all"]);
+    setStockStatus("all");
     setSelectedBrands([]);
     setSortBy("relevance");
+    setCurrentPage(1);
   };
 
   const hasActiveFilters =
     selectedCategory !== "all" ||
     priceRange[0] !== 0 ||
     priceRange[1] !== 1000 ||
-    !stockStatus.includes("all") ||
+    stockStatus !== "all" ||
     selectedBrands.length > 0;
 
   return (
@@ -352,7 +321,7 @@ export function SearchPageClient() {
                         <div key={option.value} className="flex items-center">
                           <Checkbox
                             id={option.value}
-                            checked={stockStatus.includes(option.value)}
+                            checked={stockStatus === option.value}
                             onCheckedChange={() => handleStockStatusChange(option.value)}
                           />
                           <label
