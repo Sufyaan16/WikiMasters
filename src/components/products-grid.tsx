@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { Card } from "@/components/ui/card";
@@ -15,28 +14,6 @@ interface ProductsGridProps {
   viewMode?: "grid" | "list";
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.4,
-      ease: "easeOut",
-    },
-  },
-};
-
 function formatPrice(price: number, currency: string = "Rs") {
   return `${currency} ${price.toLocaleString()}`;
 }
@@ -44,19 +21,14 @@ function formatPrice(price: number, currency: string = "Rs") {
 function ProductListCard({ product }: { product: Product }) {
   return (
     <Link href={`/products/${product.id}`} className="block group">
-      <motion.div
-        whileHover={{ x: 4 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      >
+      <div className="transition-transform hover:translate-x-1">
         <Card className="flex flex-col sm:flex-row overflow-hidden hover:shadow-lg transition-shadow">
           {/* Image */}
           <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 overflow-hidden">
-            <motion.img
+            <img
               src={product.image.src}
               alt={product.image.alt}
-              className="w-full h-full object-cover"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
+              className="w-full h-full object-cover transition-transform hover:scale-105"
             />
             {product.badge && (
               <Badge
@@ -120,7 +92,7 @@ function ProductListCard({ product }: { product: Product }) {
             </div>
           </div>
         </Card>
-      </motion.div>
+      </div>
     </Link>
   );
 }
@@ -135,18 +107,17 @@ export function ProductsGrid({ products, viewMode = "grid" }: ProductsGridProps)
       )}
     >
       {products.map((product, index) => (
-        <motion.div 
+        <div 
           key={product.id} 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.03 }}
+          className="animate-in fade-in slide-in-from-bottom-4"
+          style={{ animationDelay: `${index * 30}ms`, animationDuration: '300ms' }}
         >
           {viewMode === "grid" ? (
             <ProductCard product={product} />
           ) : (
             <ProductListCard product={product} />
           )}
-        </motion.div>
+        </div>
       ))}
     </div>
   );

@@ -1,4 +1,5 @@
 import { CartProvider } from "@/contexts/cart-context";
+import { WishlistProvider } from "@/contexts/wishlist-context";
 import { ConditionalLayout } from "@/components/conditional-layout";
 import NavBar from "@/components/nav/nav-bar";
 
@@ -9,9 +10,11 @@ export default function MainLayout({
 }) {
   return (
     <CartProvider>
-      <ConditionalLayout navbar={<NavBar />}>
-        {children}
-      </ConditionalLayout>
+      <WishlistProvider>
+        <ConditionalLayout navbar={<NavBar />}>
+          {children}
+        </ConditionalLayout>
+      </WishlistProvider>
     </CartProvider>
   );
 }
