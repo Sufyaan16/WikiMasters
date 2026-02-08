@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@stackframe/stack";
-import Swal from "sweetalert2";
 import { motion } from "framer-motion";
 
 interface WishlistButtonProps {
@@ -47,6 +46,7 @@ export function WishlistButton({
     e.stopPropagation();
 
     if (!user) {
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Sign in required",
         text: "Please sign in to add products to your wishlist",
@@ -68,6 +68,7 @@ export function WishlistButton({
         window.dispatchEvent(new Event("wishlist-updated"));
         
         // Show toast immediately
+        const { default: Swal } = await import("sweetalert2");
         Swal.fire({
           title: "Removed from Wishlist",
           icon: "success",
@@ -96,6 +97,7 @@ export function WishlistButton({
         setIsInWishlist(true);
         
         // Show toast immediately
+        const { default: Swal } = await import("sweetalert2");
         Swal.fire({
           title: "Added to Wishlist!",
           icon: "success",
@@ -145,6 +147,7 @@ export function WishlistButton({
       }
     } catch (error) {
       console.error("Error toggling wishlist:", error);
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Error",
         text:

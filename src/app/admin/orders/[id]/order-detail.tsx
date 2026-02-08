@@ -30,7 +30,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Package, User, MapPin, CreditCard, Truck, Loader2 } from "lucide-react";
 import type { Order } from "@/db/schema";
-import Swal from "sweetalert2";
 
 interface OrderDetailProps {
   order: Order;
@@ -68,6 +67,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
   const [isUpdatingTracking, setIsUpdatingTracking] = useState(false);
 
   const handleUpdateTracking = async () => {
+    const { default: Swal } = await import("sweetalert2");
     setIsUpdatingTracking(true);
     try {
       const response = await fetch(`/api/orders/${order.id}`, {
@@ -99,6 +99,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
   };
 
   const handleUpdateStatus = async () => {
+    const { default: Swal } = await import("sweetalert2");
     setIsUpdatingStatus(true);
     try {
       const response = await fetch(`/api/orders/${order.id}`, {
@@ -132,6 +133,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
   };
 
   const handleUpdatePaymentStatus = async () => {
+    const { default: Swal } = await import("sweetalert2");
     setIsUpdatingPayment(true);
     try {
       const response = await fetch(`/api/orders/${order.id}`, {
@@ -165,6 +167,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
   };
 
   const handleRefund = async () => {
+    const { default: Swal } = await import("sweetalert2");
     if (refundReason.trim().length < 10) {
       await Swal.fire({
         title: "Invalid Input",
@@ -236,6 +239,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
   };
 
   const handleCancel = async () => {
+    const { default: Swal } = await import("sweetalert2");
     const result = await Swal.fire({
       title: "Cancel Order",
       text: "Are you sure you want to cancel this order?",
@@ -610,6 +614,7 @@ export function OrderDetail({ order: initialOrder }: OrderDetailProps) {
                       paymentStatus !== "paid";
 
                     if (isRiskyTransition) {
+                      const { default: Swal } = await import("sweetalert2");
                       const result = await Swal.fire({
                         title: "Confirm Payment Status Change",
                         html: `

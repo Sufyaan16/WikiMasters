@@ -16,7 +16,6 @@ import {
 import { Product } from "@/lib/data/products";
 import { useCart } from "@/contexts/cart-context";
 import { ShoppingCart } from "lucide-react";
-import Swal from "sweetalert2";
 import { StockBadge } from "@/components/stock-badge";
 import { WishlistButton } from "@/components/wishlist-button";
 
@@ -30,9 +29,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const isOutOfStock = product.trackInventory && (product.stockQuantity || 0) === 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    const { default: Swal } = await import("sweetalert2");
     
     if (isOutOfStock) {
       Swal.fire({

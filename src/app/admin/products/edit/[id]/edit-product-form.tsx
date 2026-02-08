@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import Swal from "sweetalert2";
 import { Product } from "@/lib/data/products";
 
 interface EditProductFormProps {
@@ -110,6 +109,7 @@ export function EditProductForm({ product }: EditProductFormProps) {
       setLoading(false);
 
       // Show success message
+      const { default: Swal } = await import("sweetalert2");
       await Swal.fire({
         title: "Updated!",
         text: `${productData.name} has been updated successfully.`,
@@ -120,6 +120,7 @@ export function EditProductForm({ product }: EditProductFormProps) {
       router.push("/admin/products");
     } catch (error) {
       setLoading(false);
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Error!",
         text: "Failed to update product. Please try again.",

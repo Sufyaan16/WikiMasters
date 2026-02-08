@@ -8,7 +8,6 @@ import { Heart, ShoppingCart, ArrowUpDown } from "lucide-react";
 import { useUser } from "@stackframe/stack";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/cart-context";
-import Swal from "sweetalert2";
 import { WishlistLoadingSkeleton } from "./wishlist-loading-skeleton";
 import {
   Select,
@@ -57,6 +56,7 @@ export function WishlistPageClient() {
       if (data.success) {
         setWishlistItems(data.data);
       } else {
+        const { default: Swal } = await import("sweetalert2");
         Swal.fire({
           title: "Error",
           text: data.error || "Failed to load wishlist",
@@ -66,6 +66,7 @@ export function WishlistPageClient() {
       }
     } catch (error) {
       console.error("Error fetching wishlist:", error);
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Error",
         text: "Failed to load wishlist",
@@ -89,6 +90,7 @@ export function WishlistPageClient() {
         // Dispatch custom event to update wishlist count
         window.dispatchEvent(new Event("wishlist-updated"));
         if (!options?.suppressToast) {
+          const { default: Swal } = await import("sweetalert2");
           Swal.fire({
             title: "Removed!",
             text: "Product removed from wishlist",
@@ -105,6 +107,7 @@ export function WishlistPageClient() {
     } catch (error) {
       console.error("Error removing from wishlist:", error);
       if (!options?.suppressToast) {
+        const { default: Swal } = await import("sweetalert2");
         Swal.fire({
           title: "Error",
           text: "Failed to remove from wishlist",
@@ -122,6 +125,7 @@ export function WishlistPageClient() {
       (item.product.stockQuantity || 0) === 0;
 
     if (isOutOfStock) {
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Out of Stock",
         text: "Sorry, this product is currently unavailable.",
@@ -140,6 +144,7 @@ export function WishlistPageClient() {
     if (removed) {
       // Only add to cart if removal succeeded
       addToCart(item.product);
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Moved to Cart!",
         text: `${item.product.name} has been added to your cart.`,
@@ -150,6 +155,7 @@ export function WishlistPageClient() {
         position: "top-end",
       });
     } else {
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Error",
         text: "Failed to move item to cart",

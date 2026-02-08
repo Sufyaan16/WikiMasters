@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import Swal from "sweetalert2";
 import { CategoryInfo } from "@/lib/data/categories";
 
 interface EditCategoryFormProps {
@@ -86,6 +85,7 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
       setLoading(false);
 
       // Show success message
+      const { default: Swal } = await import("sweetalert2");
       await Swal.fire({
         title: "Updated!",
         text: `${categoryData.name} has been updated successfully.`,
@@ -97,6 +97,7 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
       router.refresh();
     } catch (error) {
       setLoading(false);
+      const { default: Swal } = await import("sweetalert2");
       await Swal.fire({
         title: "Error!",
         text: "Failed to update category. Please try again.",

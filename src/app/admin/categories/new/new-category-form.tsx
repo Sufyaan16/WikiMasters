@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import Swal from "sweetalert2";
 import Link from "next/link";
 
 export function NewCategoryForm() {
@@ -85,6 +84,7 @@ export function NewCategoryForm() {
       setLoading(false);
 
       // Show success message
+      const { default: Swal } = await import("sweetalert2");
       const result = await Swal.fire({
         title: "Success!",
         text: `${categoryData.name} category has been added successfully.`,
@@ -104,6 +104,7 @@ export function NewCategoryForm() {
       }
     } catch (error) {
       setLoading(false);
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Error!",
         text: "Failed to create category. Please try again.",

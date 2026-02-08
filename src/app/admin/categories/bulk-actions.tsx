@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Download, Upload } from "lucide-react";
 import { categoriesToCSV, parseCategoriesCSV, downloadCSV } from "@/lib/csv-utils";
 import { CategoryInfo } from "@/lib/data/categories";
-import Swal from "sweetalert2";
 import { useRef } from "react";
 
 interface BulkActionsProps {
@@ -15,10 +14,11 @@ interface BulkActionsProps {
 export function CategoriesBulkActions({ categories, onImport }: BulkActionsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const csv = categoriesToCSV(categories);
     downloadCSV(csv, `categories-export-${Date.now()}.csv`);
     
+    const { default: Swal } = await import("sweetalert2");
     Swal.fire({
       title: "Exported!",
       text: `${categories.length} categories have been exported to CSV.`,
@@ -37,6 +37,7 @@ export function CategoriesBulkActions({ categories, onImport }: BulkActionsProps
     if (!file) return;
 
     // Check file type
+    const { default: Swal } = await import("sweetalert2");
     if (!file.name.endsWith(".csv")) {
       Swal.fire({
         title: "Invalid File",

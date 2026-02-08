@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { CategoryInfo } from "@/lib/data/categories";
-import Swal from "sweetalert2";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CategoriesListProps {
@@ -70,6 +69,7 @@ export function CategoriesList({ categories: initialCategories }: CategoriesList
   }, [searchQuery, sortBy]);
 
   const handleDelete = async (categorySlug: string, categoryName: string) => {
+    const { default: Swal } = await import("sweetalert2");
     const result = await Swal.fire({
       title: "Are you sure?",
       text: `Do you want to delete "${categoryName}"?`,

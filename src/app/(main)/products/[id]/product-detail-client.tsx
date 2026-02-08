@@ -9,7 +9,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Truck, Shield, RotateCcw } from "lucide-react";
-import Swal from "sweetalert2";
 import type { Product } from "@/lib/data/products";
 
 interface ProductDetailClientProps {
@@ -27,9 +26,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     ...(product.imageHover ? [product.imageHover] : []),
   ];
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     addToCart(product);
     
+    const { default: Swal } = await import("sweetalert2");
     Swal.fire({
       toast: true,
       position: "top-end",

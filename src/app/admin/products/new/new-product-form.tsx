@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import Swal from "sweetalert2";
 
 interface Textarea extends HTMLTextAreaElement {}
 
@@ -95,6 +94,7 @@ export function NewProductForm() {
       setLoading(false);
 
       // Show success message
+      const { default: Swal } = await import("sweetalert2");
       const result = await Swal.fire({
         title: "Success!",
         text: `${productData.name} has been added successfully.`,
@@ -114,6 +114,7 @@ export function NewProductForm() {
       }
     } catch (error) {
       setLoading(false);
+      const { default: Swal } = await import("sweetalert2");
       Swal.fire({
         title: "Error!",
         text: "Failed to create product. Please try again.",

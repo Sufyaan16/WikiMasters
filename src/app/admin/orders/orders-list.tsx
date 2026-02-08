@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Eye } from "lucide-react";
 import type { Order } from "@/db/schema";
-import Swal from "sweetalert2";
 
 interface OrdersListProps {
   orders: Order[];
@@ -70,6 +69,7 @@ export function OrdersList({ orders: initialOrders }: OrdersListProps) {
   });
 
   const handleStatusChange = async (orderId: number, newStatus: string) => {
+    const { default: Swal } = await import("sweetalert2");
     try {
       const response = await fetch(`/api/orders/${orderId}`, {
         method: "PUT",
@@ -105,6 +105,7 @@ export function OrdersList({ orders: initialOrders }: OrdersListProps) {
   };
 
   const handleRefund = async (orderId: number) => {
+    const { default: Swal } = await import("sweetalert2");
     const result = await Swal.fire({
       title: "Confirm Refund",
       text: "Are you sure you want to refund this order?",
@@ -155,6 +156,7 @@ export function OrdersList({ orders: initialOrders }: OrdersListProps) {
   };
 
   const handleCancel = async (orderId: number) => {
+    const { default: Swal } = await import("sweetalert2");
     const result = await Swal.fire({
       title: "Cancel Order",
       text: "Are you sure you want to cancel this order?",

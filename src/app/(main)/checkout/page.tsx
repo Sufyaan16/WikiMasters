@@ -15,7 +15,6 @@ import { Separator } from "@/components/ui/separator";
 import { Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Swal from "sweetalert2";
 import { useState } from "react";
 import { useUser } from "@stackframe/stack";
 import { checkoutFormSchema } from "@/lib/validations/checkout";
@@ -65,6 +64,7 @@ export default function CheckoutPage() {
       setErrors(errorMessages);
       setLoading(false);
       
+      const { default: Swal } = await import("sweetalert2");
       await Swal.fire({
         title: "Validation Error",
         text: "Please check the form for errors and try again.",
@@ -124,6 +124,7 @@ export default function CheckoutPage() {
           const errorMessages = Object.entries(responseData.details)
             .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
             .join('<br>');
+          const { default: Swal } = await import("sweetalert2");
           await Swal.fire({
             title: "Validation Error",
             html: `Please check your order details:<br>${errorMessages}`,
@@ -138,6 +139,7 @@ export default function CheckoutPage() {
 
       setLoading(false);
 
+      const { default: Swal } = await import("sweetalert2");
       const result = await Swal.fire({
         title: "Order Placed Successfully!",
         html: `
@@ -160,6 +162,7 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       setLoading(false);
+      const { default: Swal } = await import("sweetalert2");
       await Swal.fire({
         title: "Error!",
         text: "Failed to place order. Please try again.",

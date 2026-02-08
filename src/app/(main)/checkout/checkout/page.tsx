@@ -15,7 +15,6 @@ import { Separator } from "@/components/ui/separator";
 import { Trash2, ShoppingBag, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Swal from "sweetalert2";
 import { useState } from "react";
 import { useUser } from "@stackframe/stack";
 import { checkoutFormSchema } from "@/lib/validations/checkout";
@@ -37,6 +36,8 @@ export default function CheckoutPage() {
     e.preventDefault();
     setLoading(true);
     setErrors({});
+
+    const { default: Swal } = await import("sweetalert2");
 
     const formData = new FormData(e.currentTarget);
     const formValues = {

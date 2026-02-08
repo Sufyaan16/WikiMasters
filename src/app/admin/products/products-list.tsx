@@ -20,7 +20,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Product } from "@/lib/data/products";
 import { StockBadge } from "@/components/stock-badge";
-import Swal from "sweetalert2";
 import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 interface ProductsListProps {
@@ -91,6 +90,7 @@ export function ProductsList({ products: initialProducts, totalCount: initialTot
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   const handleDelete = async (productId: number, productName: string) => {
+    const { default: Swal } = await import("sweetalert2");
     const result = await Swal.fire({
       title: "Are you sure?",
       text: `Do you want to delete "${productName}"?`,
@@ -112,6 +112,7 @@ export function ProductsList({ products: initialProducts, totalCount: initialTot
           throw new Error("Failed to delete product");
         }
 
+        const { default: Swal } = await import("sweetalert2");
         await Swal.fire({
           title: "Deleted!",
           text: `${productName} has been deleted.`,
@@ -124,6 +125,7 @@ export function ProductsList({ products: initialProducts, totalCount: initialTot
         fetchProducts(currentPage, debouncedSearchQuery, sortBy);
         router.refresh();
       } catch (error) {
+        const { default: Swal } = await import("sweetalert2");
         Swal.fire({
           title: "Error!",
           text: "Failed to delete product. Please try again.",
