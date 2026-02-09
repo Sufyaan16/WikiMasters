@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Doaba Sports",
-  description: "Learn how to build and scale Next.js apps with Brian Holt",
+  description: "Cricket - Accessories, Apparel, and More | Doaba Sports",
 };
 
 export default function RootLayout({

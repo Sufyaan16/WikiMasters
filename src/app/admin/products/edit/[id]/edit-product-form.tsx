@@ -227,7 +227,7 @@ export function EditProductForm({ product }: EditProductFormProps) {
                 name="salePrice"
                 type="number"
                 step="0.01"
-                placeholder="249.00 (optional)"
+                placeholder="249.00 - Must be Less than Regular Price"
                 defaultValue={product.price.sale || ""}
               />
             </div>
