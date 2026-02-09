@@ -1,6 +1,6 @@
 import db from "@/db";
 import { products } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 export interface OrderItem {
   productId: number;
@@ -30,6 +30,7 @@ export interface PriceCalculationError {
 
 /**
  * Calculate order prices server-side - NEVER trust client prices
+ * Uses a single batch query instead of N+1 individual queries
  * @param items - Array of product IDs and quantities
  * @param taxRate - Tax rate (e.g., 0.08 for 8%)
  * @param shippingCost - Shipping cost
@@ -47,10 +48,7 @@ export async function calculateOrderPrices(
       };
     }
 
-    const calculatedItems: CalculatedOrderItem[] = [];
-    let subtotal = 0;
-
-    // Fetch and calculate price for each item
+    // Validate all items upfront
     for (const item of items) {
       if (!item.productId || item.quantity <= 0) {
         return {
@@ -58,21 +56,34 @@ export async function calculateOrderPrices(
           details: { productId: item.productId, quantity: item.quantity },
         };
       }
+    }
 
-      // Fetch current product price from database
-      const [product] = await db
-        .select({
-          id: products.id,
-          name: products.name,
-          imageSrc: products.imageSrc,
-          priceRegular: products.priceRegular,
-          priceSale: products.priceSale,
-          stockQuantity: products.stockQuantity,
-          trackInventory: products.trackInventory,
-        })
-        .from(products)
-        .where(eq(products.id, item.productId))
-        .limit(1);
+    // ========================================
+    // BATCH QUERY: Fetch all products in one query
+    // Fixes N+1 problem (was: 1 query per item)
+    // ========================================
+    const productIds = items.map(item => item.productId);
+    const fetchedProducts = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        imageSrc: products.imageSrc,
+        priceRegular: products.priceRegular,
+        priceSale: products.priceSale,
+        stockQuantity: products.stockQuantity,
+        trackInventory: products.trackInventory,
+      })
+      .from(products)
+      .where(inArray(products.id, productIds));
+
+    // Build a lookup map for O(1) access
+    const productMap = new Map(fetchedProducts.map(p => [p.id, p]));
+
+    const calculatedItems: CalculatedOrderItem[] = [];
+    let subtotal = 0;
+
+    for (const item of items) {
+      const product = productMap.get(item.productId);
 
       if (!product) {
         return {

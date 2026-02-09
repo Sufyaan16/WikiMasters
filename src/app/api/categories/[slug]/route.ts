@@ -13,12 +13,19 @@ import {
   handleUnexpectedError,
   ErrorCode,
 } from "@/lib/errors";
+import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
 
 // GET single category
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  // Rate limit - relaxed (100/min for public reads)
+  const ipAddress = getIpAddress(request);
+  const rateLimitId = getRateLimitIdentifier(undefined, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "relaxed");
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const { slug } = await params;
     
@@ -73,6 +80,12 @@ export async function PUT(
   if (!authResult.success) {
     return authResult.error;
   }
+
+  // Rate limit - strict (10/min for mutations)
+  const ipAddressPut = getIpAddress(request);
+  const rateLimitIdPut = getRateLimitIdentifier(authResult.userId, ipAddressPut);
+  const rateLimitResultPut = await checkRateLimit(rateLimitIdPut, "strict");
+  if (rateLimitResultPut) return rateLimitResultPut;
 
   try {
     const { slug } = await params;
@@ -139,6 +152,12 @@ export async function DELETE(
   if (!authResult.success) {
     return authResult.error;
   }
+
+  // Rate limit - strict (10/min for mutations)
+  const ipAddressDel = getIpAddress(request);
+  const rateLimitIdDel = getRateLimitIdentifier(authResult.userId, ipAddressDel);
+  const rateLimitResultDel = await checkRateLimit(rateLimitIdDel, "strict");
+  if (rateLimitResultDel) return rateLimitResultDel;
 
   try {
     const { slug } = await params;

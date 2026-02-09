@@ -53,7 +53,13 @@ export async function middleware(request: NextRequest) {
       }
 
       // Check if user has admin role from clientReadOnlyMetadata
-      const isAdmin = user.clientReadOnlyMetadata?.role === "admin";
+      // Handle both string ("admin") and object ({ role: "admin" }) formats
+      const metadata = user.clientReadOnlyMetadata;
+      const isAdmin =
+        metadata === "admin" ||
+        (typeof metadata === "object" &&
+          metadata !== null &&
+          (metadata as Record<string, unknown>).role === "admin");
 
       if (!isAdmin) {
         // User is logged in but not admin - redirect to home with error

@@ -4,6 +4,8 @@ import { wishlists } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { stackServerApp } from "@/stack/server";
 import { requireAuth, isOwnerOrAdmin } from "@/lib/auth-helpers";
+import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
+import { handleUnexpectedError, createErrorResponse, ErrorCode } from "@/lib/errors";
 
 // DELETE - Remove product from wishlist
 export async function DELETE(
@@ -16,6 +18,12 @@ export async function DELETE(
     return authResult.error;
   }
 
+  // Rate limit - strict (10/min for mutations)
+  const ipAddress = getIpAddress(req);
+  const rateLimitId = getRateLimitIdentifier(authResult.userId, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "strict");
+  if (rateLimitResult) return rateLimitResult;
+
   const userId = authResult.userId;
 
   try {
@@ -23,10 +31,10 @@ export async function DELETE(
     const wishlistId = Number.parseInt(id);
 
     if (Number.isNaN(wishlistId)) {
-      return NextResponse.json(
-        { error: "Invalid wishlist item ID" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: "Invalid wishlist item ID",
+      });
     }
 
     // Delete from wishlist (only if it belongs to the user)
@@ -36,10 +44,10 @@ export async function DELETE(
       .returning();
 
     if (deleted.length === 0) {
-      return NextResponse.json(
-        { error: "Wishlist item not found or unauthorized" },
-        { status: 404 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.WISHLIST_ITEM_NOT_FOUND,
+        message: "Wishlist item not found or unauthorized",
+      });
     }
 
     return NextResponse.json({
@@ -47,10 +55,6 @@ export async function DELETE(
       message: "Removed from wishlist",
     });
   } catch (error) {
-    console.error("Error removing from wishlist:", error);
-    return NextResponse.json(
-      { error: "Failed to remove from wishlist" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "DELETE /api/wishlist/[id]");
   }
 }

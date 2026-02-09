@@ -131,6 +131,7 @@ export async function deleteFromCache(
 
 /**
  * Delete multiple keys matching a pattern
+ * Uses SCAN instead of KEYS to avoid blocking Redis in production
  * @param pattern - Redis key pattern (e.g., "cache:products:*")
  */
 export async function invalidateCachePattern(pattern: string): Promise<void> {
@@ -139,12 +140,26 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
   }
 
   try {
-    // Note: scan is better than keys for production
-    const keys = await redis!.keys(pattern);
-    
-    if (keys.length > 0) {
-      await redis!.del(...keys);
-      console.log(`🗑️ Cache INVALIDATE: ${pattern} (${keys.length} keys)`);
+    let scanCursor = 0;
+    let totalDeleted = 0;
+
+    do {
+      // SCAN is non-blocking unlike KEYS which can lock Redis
+      const result: [string, string[]] = await redis!.scan(scanCursor, {
+        match: pattern,
+        count: 100,
+      });
+      scanCursor = parseInt(result[0], 10);
+      const keys = result[1];
+
+      if (keys.length > 0) {
+        await redis!.del(...keys);
+        totalDeleted += keys.length;
+      }
+    } while (scanCursor !== 0);
+
+    if (totalDeleted > 0) {
+      console.log(`🗑️ Cache INVALIDATE: ${pattern} (${totalDeleted} keys)`);
     }
   } catch (error) {
     console.error("Cache invalidation error:", error);

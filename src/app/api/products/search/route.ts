@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/db/index";
 import { products } from "@/db/schema";
 import { sql, or, ilike, and, desc } from "drizzle-orm";
+import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
+import { handleUnexpectedError } from "@/lib/errors";
 
 // GET search products
 export async function GET(request: NextRequest) {
+  // Rate limit - moderate (60/min — expensive query, prevent abuse)
+  const ipAddress = getIpAddress(request);
+  const rateLimitId = getRateLimitIdentifier(undefined, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "moderate");
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get("q");
@@ -208,10 +216,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error searching products:", error);
-    return NextResponse.json(
-      { error: "Failed to search products" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "GET /api/products/search");
   }
 }

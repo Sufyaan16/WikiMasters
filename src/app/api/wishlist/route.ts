@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/db";
 import { wishlists, products } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { stackServerApp } from "@/stack/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
+import { handleUnexpectedError, createErrorResponse, ErrorCode } from "@/lib/errors";
 
-// GET - Fetch user's wishlist
+// GET - Fetch user's wishlist (with pagination)
 export async function GET(req: NextRequest) {
   // Protect route - authenticated users only
   const authResult = await requireAuth();
@@ -25,7 +26,27 @@ export async function GET(req: NextRequest) {
   const userId = authResult.userId;
 
   try {
-    // Fetch wishlist with product details
+    const searchParams = req.nextUrl.searchParams;
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+
+    if (page < 1 || limit < 1 || limit > 50) {
+      return createErrorResponse({
+        code: ErrorCode.INVALID_QUERY_PARAMS,
+        message: "Invalid pagination parameters",
+        details: { page: "Must be >= 1", limit: "Must be 1-50" },
+      });
+    }
+
+    const offset = (page - 1) * limit;
+
+    // Get total count
+    const [{ count: totalCount }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(wishlists)
+      .where(eq(wishlists.userId, userId));
+
+    // Fetch paginated wishlist with product details
     const userWishlist = await db
       .select({
         wishlist: wishlists,
@@ -34,7 +55,9 @@ export async function GET(req: NextRequest) {
       .from(wishlists)
       .leftJoin(products, eq(wishlists.productId, products.id))
       .where(eq(wishlists.userId, userId))
-      .orderBy(desc(wishlists.addedAt));
+      .orderBy(desc(wishlists.addedAt))
+      .limit(limit)
+      .offset(offset);
 
     return NextResponse.json({
       success: true,
@@ -72,13 +95,17 @@ export async function GET(req: NextRequest) {
           trackInventory: item.product.trackInventory !== false,
         } : null,
       })),
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNextPage: page < Math.ceil(totalCount / limit),
+        hasPrevPage: page > 1,
+      },
     });
   } catch (error) {
-    console.error("Error fetching wishlist:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch wishlist" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "GET /api/wishlist");
   }
 }
 
@@ -105,19 +132,19 @@ export async function POST(req: NextRequest) {
     try {
       body = await req.json();
     } catch (parseError) {
-      return NextResponse.json(
-        { error: "Malformed JSON in request body" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.MALFORMED_JSON,
+        message: "Malformed JSON in request body",
+      });
     }
     
     const { productId, notes } = body;
 
     if (!productId) {
-      return NextResponse.json(
-        { error: "Product ID is required" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: "Product ID is required",
+      });
     }
 
     // Check if product exists
@@ -128,10 +155,9 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (product.length === 0) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.PRODUCT_NOT_FOUND,
+      });
     }
 
     // Check if already in wishlist
@@ -144,10 +170,10 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (existing.length > 0) {
-      return NextResponse.json(
-        { error: "Product already in wishlist" },
-        { status: 409 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.VALIDATION_DUPLICATE,
+        message: "Product already in wishlist",
+      });
     }
 
     // Add to wishlist
@@ -178,18 +204,15 @@ export async function POST(req: NextRequest) {
           )
           .limit(1);
         
-        return NextResponse.json(
-          { error: "Product already in wishlist", data: existingItem },
-          { status: 409 }
-        );
+        return createErrorResponse({
+          code: ErrorCode.VALIDATION_DUPLICATE,
+          message: "Product already in wishlist",
+          details: { existingItem },
+        });
       }
       throw insertError;
     }
   } catch (error) {
-    console.error("Error adding to wishlist:", error);
-    return NextResponse.json(
-      { error: "Failed to add to wishlist" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "POST /api/wishlist");
   }
 }

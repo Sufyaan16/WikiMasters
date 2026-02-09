@@ -4,12 +4,20 @@ import { wishlists } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { stackServerApp } from "@/stack/server";
 import { requireAuth } from "@/lib/auth-helpers";
+import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
+import { handleUnexpectedError, createErrorResponse, ErrorCode } from "@/lib/errors";
 
 // GET - Check if product is in user's wishlist
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ productId: string }> }
 ) {
+  // Rate limit - moderate (60/min)
+  const ipAddress = getIpAddress(req);
+  const rateLimitId = getRateLimitIdentifier(undefined, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "moderate");
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const user = await stackServerApp.getUser();
 
@@ -25,10 +33,10 @@ export async function GET(
     const productIdNum = Number.parseInt(productId);
 
     if (Number.isNaN(productIdNum)) {
-      return NextResponse.json(
-        { error: "Invalid product ID" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.VALIDATION_FAILED,
+        message: "Invalid product ID",
+      });
     }
 
     const wishlistItem = await db
@@ -48,10 +56,6 @@ export async function GET(
       wishlistId: wishlistItem[0]?.id || null,
     });
   } catch (error) {
-    console.error("Error checking wishlist:", error);
-    return NextResponse.json(
-      { error: "Failed to check wishlist" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "GET /api/wishlist/check/[productId]");
   }
 }

@@ -13,12 +13,19 @@ import {
   ErrorCode,
 } from "@/lib/errors";
 import { getOrSet, CACHE_TTL, deleteFromCache, invalidateNamespace } from "@/lib/cache";
+import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
 
 // GET single product
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit - relaxed (100/min for public reads)
+  const ipAddress = getIpAddress(request);
+  const rateLimitId = getRateLimitIdentifier(undefined, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "relaxed");
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const { id } = await params;
     
@@ -92,6 +99,12 @@ export async function PUT(
     return authResult.error;
   }
 
+  // Rate limit - strict (10/min for mutations)
+  const ipAddress = getIpAddress(request);
+  const rateLimitId = getRateLimitIdentifier(authResult.userId, ipAddress);
+  const rateLimitResult = await checkRateLimit(rateLimitId, "strict");
+  if (rateLimitResult) return rateLimitResult;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -164,6 +177,12 @@ export async function DELETE(
   if (!authResult.success) {
     return authResult.error;
   }
+
+  // Rate limit - strict (10/min for mutations)
+  const ipAddressDel = getIpAddress(request);
+  const rateLimitIdDel = getRateLimitIdentifier(authResult.userId, ipAddressDel);
+  const rateLimitResultDel = await checkRateLimit(rateLimitIdDel, "strict");
+  if (rateLimitResultDel) return rateLimitResultDel;
 
   try {
     const { id } = await params;

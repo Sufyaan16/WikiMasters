@@ -32,7 +32,8 @@ export default async function AdminLayout({
   }
 
   const isAdmin =
-    user.clientMetadata === "admin" || user.clientMetadata?.role === "admin";
+    user.clientReadOnlyMetadata === "admin" ||
+    (user.clientReadOnlyMetadata as any)?.role === "admin";
 
   if (!isAdmin) {
     redirect("/");

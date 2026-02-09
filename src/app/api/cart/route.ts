@@ -12,6 +12,7 @@ import {
 } from "@/lib/validations/cart";
 import { requireAuth } from "@/lib/auth-helpers";
 import { checkRateLimit, getRateLimitIdentifier, getIpAddress } from "@/lib/rate-limit";
+import { handleUnexpectedError, handleZodError, createErrorResponse, ErrorCode } from "@/lib/errors";
 // GET /api/cart - Get user's cart
 export async function GET(request: Request) {
   // Protect route - authenticated users only
@@ -47,11 +48,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(userCart[0]);
   } catch (error) {
-    console.error("Error fetching cart:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch cart" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "GET /api/cart");
   }
 }
 
@@ -63,19 +60,19 @@ export async function POST(request: NextRequest) {
     return authResult.error;
   }
 
+  // Rate limit - strict (10/min for mutations)
+  const ipAddressPost = getIpAddress(request);
+  const rateLimitIdPost = getRateLimitIdentifier(authResult.userId, ipAddressPost);
+  const rateLimitResultPost = await checkRateLimit(rateLimitIdPost, "strict");
+  if (rateLimitResultPost) return rateLimitResultPost;
+
   try {
     const body = await request.json();
     
     // Validate request body
     const validationResult = updateCartSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: validationResult.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
+      return handleZodError(validationResult.error);
     }
 
     const { items } = validationResult.data;
@@ -112,11 +109,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(updatedCart);
   } catch (error) {
-    console.error("Error updating cart:", error);
-    return NextResponse.json(
-      { error: "Failed to update cart" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "POST /api/cart");
   }
 }
 
@@ -128,19 +121,19 @@ export async function PUT(request: NextRequest) {
     return authResult.error;
   }
 
+  // Rate limit - strict (10/min for mutations)
+  const ipAddressPut = getIpAddress(request);
+  const rateLimitIdPut = getRateLimitIdentifier(authResult.userId, ipAddressPut);
+  const rateLimitResultPut = await checkRateLimit(rateLimitIdPut, "strict");
+  if (rateLimitResultPut) return rateLimitResultPut;
+
   try {
     const { productId, quantity } = await request.json();
 
     // Validate request body
     const validationResult = updateCartItemSchema.safeParse({ productId, quantity });
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: validationResult.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
+      return handleZodError(validationResult.error);
     }
 
     const validatedData = validationResult.data;
@@ -166,13 +159,10 @@ export async function PUT(request: NextRequest) {
     } else {
       // Add new item - check cart item limit
       if (currentItems.length >= MAX_CART_ITEMS) {
-        return NextResponse.json(
-          {
-            error: "Validation failed",
-            details: { items: [`Cart cannot contain more than ${MAX_CART_ITEMS} items`] },
-          },
-          { status: 400 }
-        );
+        return createErrorResponse({
+          code: ErrorCode.VALIDATION_FAILED,
+          message: `Cart cannot contain more than ${MAX_CART_ITEMS} items`,
+        });
       }
       currentItems.push({ productId: validatedData.productId, quantity: validatedData.quantity });
     }
@@ -202,21 +192,23 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedCart);
   } catch (error) {
-    console.error("Error updating cart item:", error);
-    return NextResponse.json(
-      { error: "Failed to update cart item" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "PUT /api/cart");
   }
 }
 
 // DELETE /api/cart - Clear cart
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   // Protect route - authenticated users only
   const authResult = await requireAuth();
   if (!authResult.success) {
     return authResult.error;
   }
+
+  // Rate limit - strict (10/min for mutations)
+  const ipAddressDel = getIpAddress(request);
+  const rateLimitIdDel = getRateLimitIdentifier(authResult.userId, ipAddressDel);
+  const rateLimitResultDel = await checkRateLimit(rateLimitIdDel, "strict");
+  if (rateLimitResultDel) return rateLimitResultDel;
 
   try {
     const [updatedCart] = await db
@@ -229,18 +221,14 @@ export async function DELETE() {
       .returning();
 
     if (!updatedCart) {
-      return NextResponse.json(
-        { error: "Cart not found" },
-        { status: 404 }
-      );
+      return createErrorResponse({
+        code: ErrorCode.CART_NOT_FOUND,
+        message: "Cart not found",
+      });
     }
 
     return NextResponse.json(updatedCart);
   } catch (error) {
-    console.error("Error clearing cart:", error);
-    return NextResponse.json(
-      { error: "Failed to clear cart" },
-      { status: 500 }
-    );
+    return handleUnexpectedError(error, "DELETE /api/cart");
   }
 }
