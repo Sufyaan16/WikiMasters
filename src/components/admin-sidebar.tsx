@@ -7,6 +7,7 @@ import {
   IconSettings,
   IconInnerShadowTop,
   IconShoppingCart,
+  IconUsers,
 } from "@tabler/icons-react";
 import { useUser } from "@stackframe/stack";
 
@@ -22,8 +23,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import logo from "../../public/logo2.png";
+import Image from "next/image";
 
-export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AdminSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   const user = useUser();
 
   const adminNav = [
@@ -31,6 +36,11 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       title: "Dashboard",
       url: "/admin",
       icon: IconHome,
+    },
+    {
+      title: "Users",
+      url: "/admin/users",
+      icon: IconUsers,
     },
     {
       title: "Orders",
@@ -79,10 +89,12 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
+              className="data-[slot=sidebar-menu-button] h-14"
             >
               <a href="/admin">
-                <IconInnerShadowTop className="size-5!" />
+                <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden">
+                  <Image src={logo} alt="Doaba Sports" fill />
+                </div>
                 <span className="text-base font-semibold">Doaba Sports</span>
               </a>
             </SidebarMenuButton>
