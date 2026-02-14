@@ -23,6 +23,7 @@ export const products = pgTable("products", {
   imageAlt: text("image_alt").notNull(),
   imageHoverSrc: text("image_hover_src"),
   imageHoverAlt: text("image_hover_alt"),
+  galleryImages: json("gallery_images").$type<string[]>().default([]),
   description: text("description").notNull(),
   priceRegular: decimal("price_regular", { precision: 10, scale: 2 }).notNull(),
   priceSale: decimal("price_sale", { precision: 10, scale: 2 }),

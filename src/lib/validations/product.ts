@@ -49,6 +49,11 @@ const baseProductSchema = z.object({
     .optional()
     .nullable(),
   
+  // Gallery images (up to 6 URLs)
+  galleryImages: z.array(
+    z.string().url("Invalid gallery image URL")
+  ).max(6, "Maximum 6 gallery images allowed").default([]),
+  
   // Inventory Management
   sku: z.string()
     .max(100, "SKU must be 100 characters or less")

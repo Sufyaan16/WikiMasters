@@ -156,6 +156,7 @@ export async function GET(request: NextRequest) {
         stockQuantity: products.stockQuantity,
         lowStockThreshold: products.lowStockThreshold,
         trackInventory: products.trackInventory,
+        galleryImages: products.galleryImages,
       })
       .from(products)
       .where(whereClause)
@@ -191,6 +192,7 @@ export async function GET(request: NextRequest) {
             backgroundColor: product.badgeBackgroundColor || undefined,
           }
         : undefined,
+      gallery: (product.galleryImages as string[]) || [],
       // Inventory Management
       sku: product.sku || undefined,
       stockQuantity: product.stockQuantity || 0,

@@ -89,6 +89,7 @@ export async function GET(req: NextRequest) {
             text: item.product.badgeText,
             backgroundColor: item.product.badgeBackgroundColor || undefined,
           } : undefined,
+          gallery: (item.product.galleryImages as string[]) || [],
           sku: item.product.sku || undefined,
           stockQuantity: item.product.stockQuantity || 0,
           lowStockThreshold: item.product.lowStockThreshold || 10,

@@ -59,6 +59,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       text: dbProduct[0].badgeText,
       backgroundColor: dbProduct[0].badgeBackgroundColor || undefined,
     } : undefined,
+    gallery: (dbProduct[0].galleryImages as string[]) || [],
   };
 
   return (

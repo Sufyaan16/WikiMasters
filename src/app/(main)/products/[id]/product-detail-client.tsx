@@ -21,9 +21,17 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(product.image);
 
-  const images = [
+  // Build image list: main + gallery images (or fallback to imageHover)
+  const images: { src: string; alt: string }[] = [
     product.image,
-    ...(product.imageHover ? [product.imageHover] : []),
+    ...(product.gallery && product.gallery.length > 0
+      ? product.gallery.map((src, i) => ({
+          src,
+          alt: `${product.name} - View ${i + 2}`,
+        }))
+      : product.imageHover
+        ? [product.imageHover]
+        : []),
   ];
 
   const handleAddToCart = async () => {
@@ -77,7 +85,11 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
             {/* Image Thumbnails */}
             {images.length > 1 && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid gap-3 ${
+                images.length <= 3 ? "grid-cols-3" : 
+                images.length <= 4 ? "grid-cols-4" : 
+                "grid-cols-3 sm:grid-cols-6"
+              }`}>
                 {images.map((img, index) => (
                   <button
                     key={index}

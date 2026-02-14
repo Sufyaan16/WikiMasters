@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Price, PriceValue } from "@/components/price";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -25,9 +25,44 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
   const isOutOfStock = product.trackInventory && (product.stockQuantity || 0) === 0;
+
+  // Build the full image list: main image + gallery images (max 6 total)
+  const allImages = useMemo(() => {
+    const images = [product.image.src];
+    if (product.gallery && product.gallery.length > 0) {
+      images.push(...product.gallery.slice(0, 5)); // main + 5 gallery = 6 max
+    } else if (product.imageHover) {
+      images.push(product.imageHover.src); // fallback: use hover image
+    }
+    return images;
+  }, [product.image.src, product.imageHover, product.gallery]);
+
+  const hasMultipleImages = allImages.length > 1;
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!hasMultipleImages || !imageContainerRef.current) return;
+      const rect = imageContainerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percentage = x / rect.width;
+      const index = Math.min(
+        Math.floor(percentage * allImages.length),
+        allImages.length - 1
+      );
+      setActiveIndex(index);
+    },
+    [hasMultipleImages, allImages.length]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+    setActiveIndex(0);
+  }, []);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -61,29 +96,55 @@ export function ProductCard({ product }: ProductCardProps) {
     });
   };
 
-  const displayImage = isHovered && product.imageHover 
-    ? product.imageHover 
-    : product.image;
-
   return (
     <a
       href={`/products/${product.id}`}
-      className="block transition-opacity hover:opacity-80"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="block"
     >
       <Card className="h-full overflow-hidden p-0">
         <CardHeader className="relative block p-0">
-          <AspectRatio ratio={1.268115942} className="overflow-hidden">
-            <Image
-              src={displayImage.src}
-              alt={displayImage.alt}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="block object-cover object-center transition-opacity duration-300"
-              priority={false}
-            />
-          </AspectRatio>
+          <div
+            ref={imageContainerRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={handleMouseLeave}
+            className="relative"
+          >
+            <AspectRatio ratio={1} className="overflow-hidden">
+              {allImages.map((src, i) => (
+                <Image
+                  key={src}
+                  src={src}
+                  alt={i === 0 ? product.image.alt : `${product.name} - View ${i + 1}`}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className={`block object-cover object-center transition-opacity duration-200 ${
+                    i === activeIndex ? "opacity-100" : "opacity-0"
+                  }`}
+                  priority={false}
+                />
+              ))}
+            </AspectRatio>
+
+            {/* Gallery indicator bars */}
+            {hasMultipleImages && isHovered && (
+              <div className="absolute bottom-0 left-0 right-0 flex gap-[3px] px-2 pb-2">
+                {allImages.map((_, i) => (
+                  <div
+                    key={`bar-${product.id}-${i}`}
+                    className="h-[3px] flex-1 rounded-full transition-colors duration-150"
+                    style={{
+                      backgroundColor:
+                        i === activeIndex
+                          ? "#ea580c"
+                          : "rgba(255,255,255,0.45)",
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
           {product.badge && (
             <Badge
               style={{

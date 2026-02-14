@@ -23,6 +23,7 @@ export interface Product {
     text: string;
     backgroundColor?: string;
   };
+  gallery?: string[];
   // Inventory Management
   sku?: string;
   stockQuantity?: number;

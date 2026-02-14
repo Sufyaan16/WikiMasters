@@ -72,6 +72,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           backgroundColor: p.badgeBackgroundColor || undefined,
         }
       : undefined,
+    gallery: (p.galleryImages as string[]) || [],
   }));
 
   return (

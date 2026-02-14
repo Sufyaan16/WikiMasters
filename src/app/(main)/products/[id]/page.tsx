@@ -85,6 +85,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           backgroundColor: p.badgeBackgroundColor || undefined,
         }
       : undefined,
+    gallery: (p.galleryImages as string[]) || [],
   };
 
   return <ProductDetailClient product={product} />;

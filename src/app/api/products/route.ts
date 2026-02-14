@@ -135,6 +135,7 @@ export async function GET(request: NextRequest) {
             text: product.badgeText,
             backgroundColor: product.badgeBackgroundColor || undefined,
           } : undefined,
+          gallery: (product.galleryImages as string[]) || [],
           // Inventory Management
           sku: product.sku || undefined,
           stockQuantity: product.stockQuantity || 0,
@@ -212,6 +213,7 @@ export async function POST(request: NextRequest) {
         priceCurrency: validatedData.priceCurrency,
         badgeText: validatedData.badgeText || null,
         badgeBackgroundColor: validatedData.badgeBackgroundColor || null,
+        galleryImages: validatedData.galleryImages || [],
         // Inventory Management
         sku: validatedData.sku || null,
         stockQuantity: validatedData.stockQuantity || 0,

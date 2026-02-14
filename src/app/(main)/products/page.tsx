@@ -58,6 +58,7 @@ export default async function ProductsPage() {
           backgroundColor: p.badgeBackgroundColor || undefined,
         }
       : undefined,
+    gallery: (p.galleryImages as string[]) || [],
   }));
 
   // Transform categories to frontend format

@@ -75,6 +75,7 @@ export async function GET(
         text: product[0].badgeText,
         backgroundColor: product[0].badgeBackgroundColor || undefined,
       } : undefined,
+      gallery: (product[0].galleryImages as string[]) || [],
       // Inventory Management
       sku: product[0].sku || undefined,
       stockQuantity: product[0].stockQuantity || 0,
@@ -136,6 +137,7 @@ export async function PUT(
     if (validatedData.priceCurrency !== undefined) updateData.priceCurrency = validatedData.priceCurrency;
     if (validatedData.badgeText !== undefined) updateData.badgeText = validatedData.badgeText || null;
     if (validatedData.badgeBackgroundColor !== undefined) updateData.badgeBackgroundColor = validatedData.badgeBackgroundColor || null;
+    if (validatedData.galleryImages !== undefined) updateData.galleryImages = validatedData.galleryImages;
     // Inventory Management
     if (validatedData.sku !== undefined) updateData.sku = validatedData.sku || null;
     if (validatedData.stockQuantity !== undefined) updateData.stockQuantity = validatedData.stockQuantity;

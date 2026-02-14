@@ -54,6 +54,7 @@ export default async function Home() {
           backgroundColor: p.badgeBackgroundColor || undefined,
         }
       : undefined,
+    gallery: (p.galleryImages as string[]) || [],
   }));
 
   return (
