@@ -8,7 +8,6 @@ export const categories = pgTable("categories", {
   description: text("description").notNull(),
   longDescription: text("long_description").notNull(),
   image: text("image").notNull(),
-  imageHover: text("image_hover"),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
@@ -21,8 +20,6 @@ export const products = pgTable("products", {
   category: text("category").notNull().references(() => categories.slug, { onDelete: "restrict", onUpdate: "cascade" }),
   imageSrc: text("image_src").notNull(),
   imageAlt: text("image_alt").notNull(),
-  imageHoverSrc: text("image_hover_src"),
-  imageHoverAlt: text("image_hover_alt"),
   galleryImages: json("gallery_images").$type<string[]>().default([]),
   description: text("description").notNull(),
   priceRegular: decimal("price_regular", { precision: 10, scale: 2 }).notNull(),

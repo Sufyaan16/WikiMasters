@@ -23,7 +23,6 @@ export default async function CategoriesPage() {
     description: c.description,
     longDescription: c.longDescription,
     image: c.image,
-    imageHover: c.imageHover || undefined,
   }));
 
   return (

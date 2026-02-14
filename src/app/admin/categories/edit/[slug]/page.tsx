@@ -41,7 +41,6 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
     description: dbCategory[0].description,
     longDescription: dbCategory[0].longDescription,
     image: dbCategory[0].image,
-    imageHover: dbCategory[0].imageHover || undefined,
   };
 
   return (

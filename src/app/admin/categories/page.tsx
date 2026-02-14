@@ -28,7 +28,6 @@ export default async function AdminCategoriesPage() {
     description: category.description,
     longDescription: category.longDescription,
     image: category.image,
-    imageHover: category.imageHover || undefined,
   }));
 
   return (

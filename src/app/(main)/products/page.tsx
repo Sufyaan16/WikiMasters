@@ -40,12 +40,6 @@ export default async function ProductsPage() {
       src: p.imageSrc,
       alt: p.imageAlt,
     },
-    imageHover: p.imageHoverSrc
-      ? {
-          src: p.imageHoverSrc,
-          alt: p.imageHoverAlt || "",
-        }
-      : undefined,
     description: p.description,
     price: {
       regular: parseFloat(p.priceRegular),
@@ -68,7 +62,6 @@ export default async function ProductsPage() {
     description: c.description,
     longDescription: c.longDescription,
     image: c.image,
-    imageHover: c.imageHover || undefined,
   }));
 
   return (

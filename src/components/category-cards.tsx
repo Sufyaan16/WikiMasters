@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -13,23 +10,15 @@ interface CategoryCardsProps {
 }
 
 function CategoryCard({ category }: { category: CategoryInfo }) {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  const displayImage = isHovered && category.imageHover 
-    ? category.imageHover 
-    : category.image;
-
   return (
     <Link
       href={`/products/categories/${category.slug}`}
       className="group"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <Card className="relative h-75 overflow-hidden border-2 transition-all duration-300 hover:border-outline hover:shadow-2xl">
         <div className="relative w-full h-full">
           <Image
-            src={displayImage}
+            src={category.image}
             alt={category.name}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

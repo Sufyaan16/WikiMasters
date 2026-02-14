@@ -45,10 +45,6 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       src: dbProduct[0].imageSrc,
       alt: dbProduct[0].imageAlt,
     },
-    imageHover: dbProduct[0].imageHoverSrc ? {
-      src: dbProduct[0].imageHoverSrc,
-      alt: dbProduct[0].imageHoverAlt || `${dbProduct[0].name} - Alternate View`,
-    } : undefined,
     description: dbProduct[0].description,
     price: {
       regular: parseFloat(dbProduct[0].priceRegular),

@@ -21,7 +21,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(product.image);
 
-  // Build image list: main + gallery images (or fallback to imageHover)
+  // Build image list: main + gallery images
   const images: { src: string; alt: string }[] = [
     product.image,
     ...(product.gallery && product.gallery.length > 0
@@ -29,9 +29,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           src,
           alt: `${product.name} - View ${i + 2}`,
         }))
-      : product.imageHover
-        ? [product.imageHover]
-        : []),
+      : []),
   ];
 
   const handleAddToCart = async () => {

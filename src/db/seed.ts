@@ -199,7 +199,6 @@ async function main() {
       description: cat.description,
       longDescription: cat.longDescription,
       image: cat.image,
-      imageHover: cat.imageHover || null,
     }));
 
     await db.insert(categories).values(categoryData);
@@ -213,8 +212,6 @@ async function main() {
       category: product.category,
       imageSrc: product.image.src,
       imageAlt: product.image.alt,
-      imageHoverSrc: product.imageHover?.src || null,
-      imageHoverAlt: product.imageHover?.alt || null,
       description: product.description,
       priceRegular: product.price.regular.toString(),
       priceSale: product.price.sale?.toString() || null,

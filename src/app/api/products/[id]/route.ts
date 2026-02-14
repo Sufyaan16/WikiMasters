@@ -61,10 +61,6 @@ export async function GET(
         src: product[0].imageSrc,
         alt: product[0].imageAlt,
       },
-      imageHover: product[0].imageHoverSrc ? {
-        src: product[0].imageHoverSrc,
-        alt: product[0].imageHoverAlt || `${product[0].name} - Alternate View`,
-      } : undefined,
       description: product[0].description,
       price: {
         regular: parseFloat(product[0].priceRegular),
@@ -129,8 +125,6 @@ export async function PUT(
     if (validatedData.category !== undefined) updateData.category = validatedData.category;
     if (validatedData.imageSrc !== undefined) updateData.imageSrc = validatedData.imageSrc;
     if (validatedData.imageAlt !== undefined) updateData.imageAlt = validatedData.imageAlt;
-    if (validatedData.imageHoverSrc !== undefined) updateData.imageHoverSrc = validatedData.imageHoverSrc || null;
-    if (validatedData.imageHoverAlt !== undefined) updateData.imageHoverAlt = validatedData.imageHoverAlt || null;
     if (validatedData.description !== undefined) updateData.description = validatedData.description;
     if (validatedData.priceRegular !== undefined) updateData.priceRegular = validatedData.priceRegular.toString();
     if (validatedData.priceSale !== undefined) updateData.priceSale = validatedData.priceSale ? validatedData.priceSale.toString() : null;

@@ -144,8 +144,6 @@ export async function GET(request: NextRequest) {
         category: products.category,
         imageSrc: products.imageSrc,
         imageAlt: products.imageAlt,
-        imageHoverSrc: products.imageHoverSrc,
-        imageHoverAlt: products.imageHoverAlt,
         description: products.description,
         priceRegular: products.priceRegular,
         priceSale: products.priceSale,
@@ -174,12 +172,6 @@ export async function GET(request: NextRequest) {
         src: product.imageSrc,
         alt: product.imageAlt,
       },
-      imageHover: product.imageHoverSrc
-        ? {
-            src: product.imageHoverSrc,
-            alt: product.imageHoverAlt || `${product.name} - Alternate View`,
-          }
-        : undefined,
       description: product.description,
       price: {
         regular: parseFloat(product.priceRegular),

@@ -13,10 +13,6 @@ export interface Product {
     src: string;
     alt: string;
   };
-  imageHover?: {
-    src: string;
-    alt: string;
-  };
   description: string;
   price: ProductPrice;
   badge?: {
@@ -41,10 +37,6 @@ export const CRICKET_BATS: Product[] = [
     image: {
       src: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=800&q=80",
       alt: "Ihsan Legend Pro Elite Cricket Bat",
-    },
-    imageHover: {
-      src: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
-      alt: "Ihsan Legend Pro Elite Cricket Bat - Alternate View",
     },
     description: "Premium English willow bat with exceptional balance and power.",
     price: {
@@ -264,10 +256,6 @@ export const CRICKET_BAGS: Product[] = [
       src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80",
       alt: "Kookaburra Pro Kit Bag",
     },
-    imageHover: {
-      src: "https://images.unsplash.com/photo-1491637639811-60e2756cc1c7?w=800&q=80",
-      alt: "Kookaburra Pro Kit Bag - Alternate View",
-    },
     description: "Large capacity cricket bag with multiple compartments for all your gear.",
     price: {
       regular: 129.0,
@@ -341,10 +329,6 @@ export const PROTECTION_GEARS: Product[] = [
     image: {
       src: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=800&q=80",
       alt: "Kookaburra Elite Batting Gloves",
-    },
-    imageHover: {
-      src: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
-      alt: "Kookaburra Elite Batting Gloves - Alternate View",
     },
     description: "Premium leather batting gloves with superior grip and protection.",
     price: {
@@ -434,10 +418,6 @@ export const SPORTS_APPAREL: Product[] = [
     image: {
       src: "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=800&q=80",
       alt: "Nike Team Jersey Set",
-    },
-    imageHover: {
-      src: "https://images.unsplash.com/photo-1578932750294-f5075e85f44a?w=800&q=80",
-      alt: "Nike Team Jersey Set - Alternate View",
     },
     description: "Breathable cricket jersey with moisture-wicking technology.",
     price: {
@@ -597,10 +577,6 @@ export const TAPE_BALL_BATS: Product[] = [
     image: {
       src: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=800&q=80",
       alt: "CA Sports Power Hitter Tape Bat",
-    },
-    imageHover: {
-      src: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
-      alt: "CA Sports Power Hitter Tape Bat - Alternate View",
     },
     description: "Heavy blade tape ball bat designed for maximum power hitting.",
     price: {

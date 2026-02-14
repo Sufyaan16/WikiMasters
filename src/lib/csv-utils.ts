@@ -13,7 +13,6 @@ export function productsToCSV(products: Product[]): string {
     "Sale Price",
     "Currency",
     "Image URL",
-    "Image Hover URL",
     "Badge Text",
     "Badge Color"
   ];
@@ -28,7 +27,6 @@ export function productsToCSV(products: Product[]): string {
     product.price.sale || "",
     product.price.currency,
     product.image.src,
-    product.imageHover?.src || "",
     product.badge?.text || "",
     product.badge?.backgroundColor || ""
   ]);
@@ -50,8 +48,7 @@ export function categoriesToCSV(categories: CategoryInfo[]): string {
     "Name",
     "Description",
     "Long Description",
-    "Image URL",
-    "Image Hover URL"
+    "Image URL"
   ];
 
   const rows = categories.map((category) => [
@@ -59,8 +56,7 @@ export function categoriesToCSV(categories: CategoryInfo[]): string {
     category.name,
     category.description,
     category.longDescription,
-    category.image,
-    category.imageHover || ""
+    category.image
   ]);
 
   const csvContent = [
@@ -100,13 +96,9 @@ export function parseProductsCSV(csvContent: string): Partial<Product>[] {
         src: values[8] || "",
         alt: values[1] || "",
       },
-      imageHover: values[9] ? {
-        src: values[9],
-        alt: `${values[1]} - Alternate View` || "",
-      } : undefined,
-      badge: values[10] ? {
-        text: values[10],
-        backgroundColor: values[11] || undefined,
+      badge: values[9] ? {
+        text: values[9],
+        backgroundColor: values[10] || undefined,
       } : undefined,
     });
   }
@@ -132,7 +124,6 @@ export function parseCategoriesCSV(csvContent: string): Partial<CategoryInfo>[] 
       description: values[2],
       longDescription: values[3],
       image: values[4],
-      imageHover: values[5] || undefined,
     });
   }
   return categories;

@@ -121,10 +121,6 @@ export async function GET(request: NextRequest) {
             src: product.imageSrc,
             alt: product.imageAlt,
           },
-          imageHover: product.imageHoverSrc ? {
-            src: product.imageHoverSrc,
-            alt: product.imageHoverAlt || `${product.name} - Alternate View`,
-          } : undefined,
           description: product.description,
           price: {
             regular: parseFloat(product.priceRegular),
@@ -205,8 +201,6 @@ export async function POST(request: NextRequest) {
         category: validatedData.category,
         imageSrc: validatedData.imageSrc,
         imageAlt: validatedData.imageAlt,
-        imageHoverSrc: validatedData.imageHoverSrc || null,
-        imageHoverAlt: validatedData.imageHoverAlt || null,
         description: validatedData.description,
         priceRegular: validatedData.priceRegular.toString(),
         priceSale: validatedData.priceSale ? validatedData.priceSale.toString() : null,

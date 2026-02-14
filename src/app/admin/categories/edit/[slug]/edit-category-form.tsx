@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CategoryInfo } from "@/lib/data/categories";
 import { useCloudinaryUpload } from "@/hooks/use-cloudinary-upload";
+import { Upload, X, Loader2 } from "lucide-react";
 
 interface EditCategoryFormProps {
   category: CategoryInfo;
@@ -31,8 +32,7 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>(category.image);
-  const [imageHoverPreview, setImageHoverPreview] = useState<string>(category.imageHover || "");
-
+  const primaryInputRef = useRef<HTMLInputElement>(null);
   const { uploading: imageUploading, uploadFile } = useCloudinaryUpload();
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,14 +40,6 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
     if (file) {
       const url = await uploadFile(file);
       if (url) setImagePreview(url);
-    }
-  };
-
-  const handleImageHoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = await uploadFile(file);
-      if (url) setImageHoverPreview(url);
     }
   };
 
@@ -63,7 +55,6 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
       description: formData.get("description"),
       longDescription: formData.get("longDescription"),
       image: imagePreview || category.image,
-      imageHover: imageHoverPreview || category.imageHover,
     };
 
     try {
@@ -195,65 +186,41 @@ export function EditCategoryForm({ category }: EditCategoryFormProps) {
 
           {/* Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="image">Category Image (Primary)</Label>
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <Input
-                  id="image"
-                  name="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  disabled={imageUploading}
-                  className="cursor-pointer"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  {imageUploading
-                    ? "Uploading to cloud..."
-                    : "Upload a new primary banner image to replace the current one (recommended: 1920x1080px)"}
-                </p>
-              </div>
-              {imagePreview && (
-                <div className="w-32 h-32 border rounded-lg overflow-hidden">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            <Label>Category Image (Primary)</Label>
+            <p className="text-sm text-muted-foreground">
+              Click the square to upload or replace the banner image (recommended: 1920×1080px)
+            </p>
+            <div
+              className="group relative w-40 h-40 border-2 border-dashed border-muted-foreground/40 rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/60 transition-colors overflow-hidden"
+              onClick={() => primaryInputRef.current?.click()}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') primaryInputRef.current?.click(); }}
+              role="button"
+              tabIndex={0}
+            >
+              {imagePreview ? (
+                <>
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => { e.stopPropagation(); setImagePreview(""); }}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </>
+              ) : imageUploading ? (
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              ) : (
+                <Upload className="h-8 w-8 text-muted-foreground" />
               )}
-            </div>
-          </div>
-
-          {/* Hover Image Upload */}
-          <div className="space-y-2">
-            <Label htmlFor="imageHover">Category Image (Hover)</Label>
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <Input
-                  id="imageHover"
-                  name="imageHover"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageHoverChange}
-                  disabled={imageUploading}
-                  className="cursor-pointer"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  {imageUploading
-                    ? "Uploading to cloud..."
-                    : "Upload hover image (optional - shown when customer hovers over category card)"}
-                </p>
-              </div>
-              {imageHoverPreview && (
-                <div className="w-32 h-32 border rounded-lg overflow-hidden">
-                  <img
-                    src={imageHoverPreview}
-                    alt="Hover Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              <input
+                ref={primaryInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+                disabled={imageUploading}
+              />
             </div>
           </div>
 

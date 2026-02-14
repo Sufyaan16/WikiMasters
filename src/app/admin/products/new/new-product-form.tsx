@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCloudinaryUpload } from "@/hooks/use-cloudinary-upload";
+import { Upload, ImagePlus, X, Loader2 } from "lucide-react";
 
 interface Textarea extends HTMLTextAreaElement {}
 
@@ -25,20 +26,18 @@ export function NewProductForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
-  const [imageHoverPreview, setImageHoverPreview] = useState<string>("");
-  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(Array(6).fill(""));
   const [galleryUploading, setGalleryUploading] = useState<Record<number, boolean>>({});
+
+  const primaryInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const { uploading: imageUploading, uploadFile } = useCloudinaryUpload();
 
-  const addGalleryUrl = () => {
-    if (galleryUrls.length < 6) {
-      setGalleryUrls([...galleryUrls, ""]);
-    }
-  };
-
   const removeGalleryUrl = (index: number) => {
-    setGalleryUrls(galleryUrls.filter((_, i) => i !== index));
+    const updated = [...galleryUrls];
+    updated[index] = "";
+    setGalleryUrls(updated);
   };
 
   const updateGalleryUrl = (index: number, value: string) => {
@@ -52,14 +51,6 @@ export function NewProductForm() {
     if (file) {
       const url = await uploadFile(file);
       if (url) setImagePreview(url);
-    }
-  };
-
-  const handleImageHoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = await uploadFile(file);
-      if (url) setImageHoverPreview(url);
     }
   };
 
@@ -94,8 +85,6 @@ export function NewProductForm() {
         priceCurrency: "USD",
         imageSrc: imagePreview, // Cloudinary URL
         imageAlt: formData.get("name") as string,
-        imageHoverSrc: imageHoverPreview || null,
-        imageHoverAlt: imageHoverPreview ? `${formData.get("name")} - Alternate View` : null,
         badgeText: formData.get("badgeText") as string || null,
         badgeBackgroundColor: formData.get("badgeColor") as string || null,
         // Inventory Management
@@ -138,9 +127,8 @@ export function NewProductForm() {
       } else {
         // Reset form
         (e.target as HTMLFormElement).reset();
-        setImageHoverPreview("");
         setImagePreview("");
-        setGalleryUrls([]);
+        setGalleryUrls(Array(6).fill(""));
       }
     } catch (error) {
       setLoading(false);
@@ -250,152 +238,97 @@ export function NewProductForm() {
             </div>
           </div>
 
-          {/* Image Upload */}
+          {/* Image Upload - Dotted Square */}
           <div className="space-y-2">
-            <Label htmlFor="image">
+            <Label>
               Product Image (Primary) <span className="text-red-500">*</span>
             </Label>
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Input
-                    id="image"
-                    name="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    required={!imagePreview}
-                    disabled={imageUploading}
-                    className="cursor-pointer"
-                  />
+            <div
+              className="relative w-40 h-40 border-2 border-dashed border-muted-foreground/40 rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/60 transition-colors overflow-hidden group"
+              onClick={() => !imageUploading && primaryInputRef.current?.click()}
+            >
+              {imagePreview ? (
+                <>
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => { e.stopPropagation(); setImagePreview(""); }}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              ) : imageUploading ? (
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <span className="text-xs">Uploading...</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {imageUploading
-                    ? "Uploading to cloud..."
-                    : "Upload primary product image (JPG, PNG, or WebP)"}
-                </p>
-              </div>
-              {imagePreview && (
-                <div className="w-32 h-32 border rounded-lg overflow-hidden">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                  <Upload className="h-8 w-8" />
+                  <span className="text-xs">Upload Image</span>
                 </div>
               )}
+              <input
+                ref={primaryInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
             </div>
+            <p className="text-sm text-muted-foreground">
+              JPG, PNG, or WebP — click the square to upload
+            </p>
           </div>
 
-          {/* Hover Image Upload */}
-          <div className="space-y-2">
-            <Label htmlFor="imageHover">
-              Product Image (Hover)
-            </Label>
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Input
-                    id="imageHover"
-                    name="imageHover"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageHoverChange}
-                    disabled={imageUploading}
-                    className="cursor-pointer"
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {imageUploading
-                    ? "Uploading to cloud..."
-                    : "Upload hover image (optional - shown when customer hovers over product)"}
-                </p>
-              </div>
-              {imageHoverPreview && (
-                <div className="w-32 h-32 border rounded-lg overflow-hidden">
-                  <img
-                    src={imageHoverPreview}
-                    alt="Hover Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Gallery Images Section */}
-          <div className="space-y-4 pt-4 border-t">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Gallery Images</h3>
-                <p className="text-sm text-muted-foreground">
-                  Add up to 6 gallery images for the product card hover effect
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addGalleryUrl}
-                disabled={galleryUrls.length >= 6}
-              >
-                + Add Image
-              </Button>
-            </div>
-
-            {galleryUrls.length === 0 && (
-              <p className="text-sm text-muted-foreground italic py-4 text-center border border-dashed rounded-lg">
-                No gallery images added yet. Click &quot;+ Add Image&quot; to add up to 6 images.
+          {/* Gallery Images - 3×2 Grid of Dotted Squares */}
+          <div className="space-y-3 pt-4 border-t">
+            <div>
+              <h3 className="text-lg font-semibold">Gallery Images</h3>
+              <p className="text-sm text-muted-foreground">
+                Upload up to 6 gallery images for the product card hover effect
               </p>
-            )}
-
-            {galleryUrls.map((url, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <div className="flex-1 space-y-2">
-                  <Label className="text-sm">
-                    Gallery Image {index + 1}
-                  </Label>
-                  <Input
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {galleryUrls.map((url, index) => (
+                <div
+                  key={index}
+                  className=" h-60 w-90 aspect-square border-2 border-dashed border-muted-foreground/40 rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/60 transition-colors overflow-hidden group"
+                  onClick={() => !galleryUploading[index] && galleryInputRefs.current[index]?.click()}
+                >
+                  {url ? (
+                    <>
+                      <img src={url} alt={`Gallery ${index + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => { e.stopPropagation(); removeGalleryUrl(index); }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  ) : galleryUploading[index] ? (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <span className="text-[10px]">Uploading...</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <ImagePlus className="h-6 w-6" />
+                      <span className="text-[10px]">Gallery {index + 1}</span>
+                    </div>
+                  )}
+                  <input
+                    ref={(el) => { galleryInputRefs.current[index] = el; }}
                     type="file"
                     accept="image/*"
+                    className="hidden"
                     onChange={(e) => handleGalleryFileChange(e, index)}
-                    disabled={galleryUploading[index]}
-                    className="cursor-pointer"
                   />
-                  <Input
-                    type="url"
-                    placeholder="Or paste image URL directly"
-                    value={url}
-                    onChange={(e) => updateGalleryUrl(index, e.target.value)}
-                    className="text-sm"
-                  />
-                  {galleryUploading[index] && (
-                    <p className="text-xs text-muted-foreground">Uploading...</p>
-                  )}
                 </div>
-                {url && (
-                  <div className="w-16 h-16 border rounded-lg overflow-hidden shrink-0 mt-6">
-                    <img
-                      src={url}
-                      alt={`Gallery ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  </div>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-6 text-red-500 hover:text-red-700 hover:bg-red-50 px-2"
-                  onClick={() => removeGalleryUrl(index)}
-                >
-                  ✕
-                </Button>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Inventory Management Section */}

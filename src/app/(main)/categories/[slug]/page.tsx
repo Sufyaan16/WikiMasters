@@ -65,7 +65,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     description: c.description,
     longDescription: c.longDescription,
     image: c.image,
-    imageHover: c.imageHover || undefined,
   };
 
   // Fetch products for this category
@@ -84,12 +83,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       src: p.imageSrc,
       alt: p.imageAlt,
     },
-    imageHover: p.imageHoverSrc
-      ? {
-          src: p.imageHoverSrc,
-          alt: p.imageHoverAlt || "",
-        }
-      : undefined,
     description: p.description,
     price: {
       regular: parseFloat(p.priceRegular),

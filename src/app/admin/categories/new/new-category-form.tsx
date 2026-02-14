@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,13 +22,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { useCloudinaryUpload } from "@/hooks/use-cloudinary-upload";
+import { Upload, X, Loader2 } from "lucide-react";
 
 export function NewCategoryForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
-  const [imageHoverPreview, setImageHoverPreview] = useState<string>("");
-
+  const primaryInputRef = useRef<HTMLInputElement>(null);
   const { uploading: imageUploading, uploadFile } = useCloudinaryUpload();
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,14 +36,6 @@ export function NewCategoryForm() {
     if (file) {
       const url = await uploadFile(file);
       if (url) setImagePreview(url);
-    }
-  };
-
-  const handleImageHoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = await uploadFile(file);
-      if (url) setImageHoverPreview(url);
     }
   };
 
@@ -61,7 +53,6 @@ export function NewCategoryForm() {
         description: formData.get("description") as string,
         longDescription: formData.get("longDescription") as string,
         image: imagePreview, // For now using the preview
-        imageHover: imageHoverPreview || null,
       };
 
       // Send to API
@@ -97,7 +88,6 @@ export function NewCategoryForm() {
         // Reset form
         (e.target as HTMLFormElement).reset();
         setImagePreview("");
-        setImageHoverPreview("");
       }
     } catch (error) {
       setLoading(false);
@@ -212,73 +202,48 @@ export function NewCategoryForm() {
             />
           </div>
 
-          {/* Image Upload */}
+          {/* Image Upload - Dotted Square */}
           <div className="space-y-2">
-            <Label htmlFor="image">
+            <Label>
               Category Image (Primary) <span className="text-red-500">*</span>
             </Label>
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <Input
-                  id="image"
-                  name="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  required={!imagePreview}
-                  disabled={imageUploading}
-                  className="cursor-pointer"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  {imageUploading
-                    ? "Uploading to cloud..."
-                    : "Upload primary banner image (recommended: 1920x1080px)"}
-                </p>
-              </div>
-              {imagePreview && (
-                <div className="w-32 h-32 border rounded-lg overflow-hidden">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
+            <div
+              className="relative w-40 h-40 border-2 border-dashed border-muted-foreground/40 rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/60 transition-colors overflow-hidden group"
+              onClick={() => !imageUploading && primaryInputRef.current?.click()}
+            >
+              {imagePreview ? (
+                <>
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => { e.stopPropagation(); setImagePreview(""); }}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              ) : imageUploading ? (
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <span className="text-xs">Uploading...</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                  <Upload className="h-8 w-8" />
+                  <span className="text-xs">Upload Image</span>
                 </div>
               )}
+              <input
+                ref={primaryInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
             </div>
-          </div>
-
-          {/* Hover Image Upload */}
-          <div className="space-y-2">
-            <Label htmlFor="imageHover">
-              Category Image (Hover)
-            </Label>
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <Input
-                  id="imageHover"
-                  name="imageHover"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageHoverChange}
-                  disabled={imageUploading}
-                  className="cursor-pointer"
-                />
-                <p className="text-sm text-muted-foreground mt-2">
-                  {imageUploading
-                    ? "Uploading to cloud..."
-                    : "Upload hover image (optional - shown when customer hovers over category card)"}
-                </p>
-              </div>
-              {imageHoverPreview && (
-                <div className="w-32 h-32 border rounded-lg overflow-hidden">
-                  <img
-                    src={imageHoverPreview}
-                    alt="Hover Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Recommended: 1920x1080px — click the square to upload
+            </p>
           </div>
 
           {/* Action Buttons */}

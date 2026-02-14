@@ -34,11 +34,6 @@ const baseProductSchema = z.object({
   imageAlt: z.string()
     .min(1, "Image alt text is required")
     .max(200, "Alt text must be 200 characters or less"),
-  imageHoverSrc: z.string().url("Invalid hover image URL").optional().nullable(),
-  imageHoverAlt: z.string()
-    .max(200, "Hover alt text must be 200 characters or less")
-    .optional()
-    .nullable(),
   badgeText: z.string()
     .min(1)
     .max(20, "Badge text must be 20 characters or less")

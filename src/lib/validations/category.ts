@@ -19,7 +19,6 @@ const baseCategorySchema = z.object({
     .min(20, "Long description must be at least 20 characters")
     .max(2000, "Long description must be 2000 characters or less"),
   image: z.string().url("Invalid image URL"),
-  imageHover: z.string().url("Invalid hover image URL").optional(),
 });
 
 // Create category schema (all fields required except optional ones)

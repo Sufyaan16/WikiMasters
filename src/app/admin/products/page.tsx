@@ -39,10 +39,6 @@ export default async function AdminProductsPage() {
       src: product.imageSrc,
       alt: product.imageAlt,
     },
-    imageHover: product.imageHoverSrc ? {
-      src: product.imageHoverSrc,
-      alt: product.imageHoverAlt || `${product.name} - Alternate View`,
-    } : undefined,
     description: product.description,
     price: {
       regular: parseFloat(product.priceRegular),

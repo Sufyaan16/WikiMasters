@@ -67,7 +67,6 @@ export async function GET(request: NextRequest) {
           description: category.description,
           longDescription: category.longDescription,
           image: category.image,
-          imageHover: category.imageHover || undefined,
         }));
 
         const totalPages = Math.ceil(totalCount / limit);
@@ -127,7 +126,6 @@ export async function POST(request: NextRequest) {
         description: validatedData.description,
         longDescription: validatedData.longDescription,
         image: validatedData.image,
-        imageHover: validatedData.imageHover || null,
       })
       .returning();
 

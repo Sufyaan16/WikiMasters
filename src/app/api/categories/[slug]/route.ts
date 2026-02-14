@@ -50,7 +50,6 @@ export async function GET(
           description: category[0].description,
           longDescription: category[0].longDescription,
           image: category[0].image,
-          imageHover: category[0].imageHover || undefined,
         };
       },
       CACHE_TTL.CATEGORIES
@@ -110,7 +109,6 @@ export async function PUT(
     if (validatedData.description !== undefined) updateData.description = validatedData.description;
     if (validatedData.longDescription !== undefined) updateData.longDescription = validatedData.longDescription;
     if (validatedData.image !== undefined) updateData.image = validatedData.image;
-    if (validatedData.imageHover !== undefined) updateData.imageHover = validatedData.imageHover || null;
 
     const updated = await db
       .update(categories)

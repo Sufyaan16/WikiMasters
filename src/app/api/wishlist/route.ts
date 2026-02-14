@@ -75,10 +75,6 @@ export async function GET(req: NextRequest) {
             src: item.product.imageSrc,
             alt: item.product.imageAlt,
           },
-          imageHover: item.product.imageHoverSrc ? {
-            src: item.product.imageHoverSrc,
-            alt: item.product.imageHoverAlt || `${item.product.name} - Alternate View`,
-          } : undefined,
           description: item.product.description,
           price: {
             regular: item.product.priceRegular && !isNaN(parseFloat(item.product.priceRegular)) ? parseFloat(item.product.priceRegular) : 0,

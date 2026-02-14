@@ -36,11 +36,9 @@ export function ProductCard({ product }: ProductCardProps) {
     const images = [product.image.src];
     if (product.gallery && product.gallery.length > 0) {
       images.push(...product.gallery.slice(0, 5)); // main + 5 gallery = 6 max
-    } else if (product.imageHover) {
-      images.push(product.imageHover.src); // fallback: use hover image
     }
     return images;
-  }, [product.image.src, product.imageHover, product.gallery]);
+  }, [product.image.src, product.gallery]);
 
   const hasMultipleImages = allImages.length > 1;
 
